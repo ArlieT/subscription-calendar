@@ -1,0 +1,54 @@
+// import { varchar, date, integer, pgTable } from 'drizzle-orm/pg-core';
+// export const usersTable = pgTable('users', {
+//   id: integer().primaryKey().generatedAlwaysAsIdentity({ startWith: 1000 }),
+//   name: varchar({ length: 255 }).notNull(),
+//   email: varchar({ length: 255 }).notNull().unique(),
+// });
+
+// export const subscriptionsTable = pgTable('subscriptions', {
+//   id: integer().primaryKey().generatedAlwaysAsIdentity({ startWith: 1000 }),
+//   name: varchar({ length: 255 }).notNull(),
+//   cost: integer().notNull(),
+//   cycle: varchar({ length: 255 }).notNull(),
+//   dueDate: date({ mode: 'date' }).notNull(),
+//   createdAt: date({ mode: 'date' }).notNull(),
+//   icon: varchar({ length: 255 }),
+//   userId: integer('userId').references(() => usersTable.id),
+// });
+
+// export type subscriptions = typeof subscriptionsTable.$inferSelect;
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Cycle {
+  MONTHLY
+  YEARLY
+}
+
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  name      String
+  cost      Int
+  cycle     Cycle    @default(MONTHLY)
+  dueDate   DateTime
+  icon      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model User {
+  id          Int            @id @default(autoincrement())
+  email       String         @unique
+  name        String?
+  subsription Subscription[]
+}
