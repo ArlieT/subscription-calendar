@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CardDescription, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ComboboxDemo } from '@/components/ui/combo-box';
 
 import MotionNumber from 'motion-number';
 import { Subscription } from 'src/types';
@@ -25,7 +26,6 @@ import {
 } from 'src/db/queries';
 import { Cycle } from '@prisma/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { ComboboxDemo } from './ui/combo-box-1';
 
 export default function EnhancedSubscriptionManagerComponent() {
   // Access the client
