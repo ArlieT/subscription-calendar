@@ -1,13 +1,6 @@
 'use client';
-import React, {
-  createContext,
-  LegacyRef,
-  MutableRefObject,
-  useContext,
-  useRef,
-} from 'react';
+import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import useClickoutSide from '@/lib/hooks/useClickoutSide';
 import useClickOutside from '@/lib/hooks/useClickoutSide';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';

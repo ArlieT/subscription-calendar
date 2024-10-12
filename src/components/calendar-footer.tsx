@@ -1,16 +1,12 @@
 import { Button, ButtonProps } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from '@radix-ui/react-popover';
-import { eachDayOfInterval, endOfMonth, set, startOfMonth } from 'date-fns';
-import { ChevronLeft, ChevronRight, Divide, Trash } from 'lucide-react';
+import { Popover, PopoverTrigger } from '@radix-ui/react-popover';
+import { eachDayOfInterval, endOfMonth, startOfMonth } from 'date-fns';
+import { ChevronLeft, ChevronRight, Trash } from 'lucide-react';
 import { format } from 'date-fns';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import Avatar from './Avatar';
-import { animate, motion, useAnimation } from 'framer-motion';
+import { motion, useAnimation } from 'framer-motion';
 import { BottomSheet } from './bottom-sheet';
 import { Subscription } from '@prisma/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';

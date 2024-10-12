@@ -15,7 +15,6 @@ import {
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  ref?: React.Ref<HTMLButtonElement>;
   date?: Date;
   setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
 }
@@ -23,7 +22,6 @@ export interface ButtonProps
 export function DatePicker({
   date,
   setDate,
-  ref,
   className,
   ...props
 }: ButtonProps) {
