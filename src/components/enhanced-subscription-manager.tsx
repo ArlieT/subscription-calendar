@@ -25,6 +25,8 @@ import {
 } from 'src/db/queries';
 import { Cycle } from '@prisma/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { CommandDemo } from './ui/combo-box';
+import { ComboboxDemo } from './ui/combo-box-1';
 
 export default function EnhancedSubscriptionManagerComponent() {
   // Access the client
@@ -32,6 +34,10 @@ export default function EnhancedSubscriptionManagerComponent() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>(new Date());
   const [billingCycle, setBillingCycle] = useState<Cycle>(Cycle.MONTHLY);
+  const [platform, setPlatformIcon] = useState({
+    name: '',
+    icon: '',
+  });
 
   const addSubscription = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,11 +47,11 @@ export default function EnhancedSubscriptionManagerComponent() {
 
     const newSubscription: Subscription = {
       id: Date.now(),
-      name: formData.get('name') as string,
+      name: platform.name,
       cost: parseFloat(formData.get('cost') as string),
       billingCycle: billingCycle,
       dueDate: new Date(dueDate),
-      icon: (formData.get('icon') as string) || undefined,
+      icon: platform.icon,
     };
 
     const result = await addsubscriptionDB(
@@ -76,7 +82,7 @@ export default function EnhancedSubscriptionManagerComponent() {
   }, 0);
 
   return (
-    <div className="my-10 w-full md:max-w-2xl p-6 md:border rounded-md">
+    <div className="my-10 w-full md:max-w-3xl p-6 md:border rounded-md">
       <div className="w-full flex-col flex gap-4">
         <div>
           <CardTitle>Subscription Manager</CardTitle>
@@ -91,7 +97,9 @@ export default function EnhancedSubscriptionManagerComponent() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Platform</Label>
-                  <Input id="name" name="name" required />
+                  <div className="space-y-2">
+                    <ComboboxDemo setPlatform={setPlatformIcon} />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="cost">Cost</Label>
@@ -133,11 +141,12 @@ export default function EnhancedSubscriptionManagerComponent() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="icon">Icon URL (optional)</Label>
-                <Input id="icon" name="icon" type="url" />
-              </div>
-              <Button type="submit" className="w-full">
+
+              <Button
+                type="submit"
+                variant="ghost"
+                className="w-full bg-foreground text-background"
+              >
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Subscription
               </Button>
             </form>

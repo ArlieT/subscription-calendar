@@ -21,8 +21,7 @@ const Avatar = ({ fallback, ...props }: AvatarProps) => {
         <ImageWithFallback
           src={props.src}
           alt={props.alt || 'avatar'}
-          fill
-          className={cn('object-cover object-center', props.className)}
+          className={cn(props.className)}
           fallbackSrc={'https://i.sstatic.net/7W5Wq.png?s=64'}
         />
       ) : (
