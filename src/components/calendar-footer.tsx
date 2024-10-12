@@ -322,6 +322,8 @@ const CalendarFooter = ({
   );
 };
 
+CalendarFooter.displayName = 'CalendarFooter';
+
 export default CalendarFooter;
 
 const CalendarButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
