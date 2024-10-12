@@ -343,3 +343,5 @@ const CalendarButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
     );
   }
 );
+
+CalendarButton.displayName = 'CalendarButton';
