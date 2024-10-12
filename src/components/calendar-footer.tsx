@@ -191,8 +191,8 @@ const CalendarFooter = ({
             const subscriptionsForDay = getSubscriptionsForDay(day);
 
             return (
-              <motion.div>
-                <Popover key={day.toISOString()}>
+              <div key={day.toISOString()}>
+                <Popover>
                   <PopoverTrigger asChild>
                     <CalendarButton
                       className={`relative bg-neutral-700 rounded-2xl border-none shadow-sm w-full h-full ${
@@ -250,7 +250,7 @@ const CalendarFooter = ({
                     </CalendarButton>
                   </PopoverTrigger>
                 </Popover>
-              </motion.div>
+              </div>
             );
           })}
           <BottomSheet

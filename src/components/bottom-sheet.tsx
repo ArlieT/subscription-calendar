@@ -13,7 +13,7 @@ type Props = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
-  const ref = useClickOutside<HTMLDivElement>((e) => {
+  const ref = useClickOutside<HTMLDivElement>(() => {
     if (open) {
       setOpen(false);
     }

@@ -25,7 +25,6 @@ import {
 } from 'src/db/queries';
 import { Cycle } from '@prisma/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { CommandDemo } from './ui/combo-box';
 import { ComboboxDemo } from './ui/combo-box-1';
 
 export default function EnhancedSubscriptionManagerComponent() {

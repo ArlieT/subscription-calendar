@@ -1,13 +1,11 @@
-import {
-  Calculator,
-  Calendar,
-  CreditCard,
-  icons,
-  Settings,
-  Smile,
-  User,
-} from 'lucide-react';
+'use client';
 
+import * as React from 'react';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import axios from 'axios';
+
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -15,52 +13,127 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-  CommandShortcut,
 } from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { useQuery } from '@tanstack/react-query';
+import Avatar from '../Avatar';
+import useDebounce from '@/lib/hooks/useDebounce';
+import { LogoApiResponse } from 'src/types';
 
-type Items = {
-  name: string;
-  heading: string;
-  items: {
-    name: string;
-    icon: React.ReactNode;
-  };
-};
+export const retrieveBrandDataFromBrandDev = async (domain: string) => {
+  const url = 'https://api.brand.dev/v1/brand/retrieve';
+  const API_KEY = process.env.NEXT_PUBLIC_BRAND_API_KEY;
 
-type CommandDemoProps = {
-  className?: string;
-  items: Items[];
-};
-
-const test = [
-  {
-    name: 'test',
-    heading: 'test',
-    items: [
-      {
-        name: 'test',
-        icon: <Calendar className="mr-2 h-4 w-4" />,
+  try {
+    const response = await axios.get(url, {
+      params: {
+        domain: domain,
       },
-    ],
-  },
-];
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${API_KEY}`,
+      },
+    });
 
-export function CommandDemo({ className, items }: CommandDemoProps) {
+    return response.data;
+  } catch (error) {
+    console.error('Error retrieving brand data:', error);
+  }
+};
+
+export function ComboboxDemo({
+  setPlatform,
+}: {
+  setPlatform: React.Dispatch<
+    React.SetStateAction<{
+      name: string;
+      icon: string;
+    }>
+  >;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState('');
+
+  const { data: logo } = useQuery<LogoApiResponse>({
+    queryKey: ['logos', value],
+    queryFn: async () => retrieveBrandDataFromBrandDev(value),
+  });
+
+  const handleChange = useDebounce((event: string) => {
+    if (event) {
+      setValue(event);
+    }
+  }, 300);
+
+  const removeDomain = (domain: string) => {
+    return domain?.split('.')[0];
+  };
+
   return (
-    <Command className="rounded-lg border shadow-md ">
-      <CommandInput placeholder="Type a command or search..." />
-      <CommandEmpty>No results found.</CommandEmpty>
-      <CommandList>
-        {items?.map((item) => (
-          <CommandGroup heading={item.heading}>
-            <CommandItem>
-              {item.items.icon}
-              <span>{item.items.name}</span>
-            </CommandItem>
-          </CommandGroup>
-        ))}
-      </CommandList>
-    </Command>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {value ? logo?.brand.domain : 'select platform'}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0">
+        <Command>
+          <CommandInput
+            placeholder="add domain like: netflix(.com)"
+            onValueChange={handleChange}
+          />
+          <CommandList>
+            <CommandEmpty>
+              {!logo ? 'No framework found.' : 'No results found.'}
+            </CommandEmpty>
+            <CommandGroup>
+              {logo?.status === 'ok' ? (
+                <CommandItem
+                  key={value}
+                  value={JSON.stringify({
+                    name: removeDomain(value),
+                    icon: logo?.brand?.logos[0]?.url || '',
+                  })}
+                  onSelect={(value) => {
+                    const data = JSON.parse(value);
+                    setPlatform(data);
+                    setOpen(false);
+                  }}
+                  className="cursor-pointer flex justify-between"
+                >
+                  <div className="size-5 md:size-6">
+                    <Avatar
+                      src={logo?.brand.logos[0]?.url}
+                      fallback={logo?.brand.domain || ''}
+                      className="outline"
+                    />
+                  </div>
+                  {logo?.brand.domain.replace(/\.com$/, '')}
+                  <Check
+                    className={cn(
+                      'mr-2 h-4 w-4',
+                      removeDomain(logo?.brand.domain || '') ===
+                        removeDomain(value)
+                        ? 'opacity-100'
+                        : 'opacity-0'
+                    )}
+                  />
+                </CommandItem>
+              ) : null}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
