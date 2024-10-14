@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
@@ -25,8 +25,7 @@ import {
 } from 'src/db/queries';
 import { Cycle } from '@prisma/client';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useUser, useSession } from '@clerk/nextjs';
-import useSupabaseClient from '@/lib/hooks/useSupabaseClient';
+import { useClerk, useUser } from '@clerk/nextjs';
 
 export default function SubscriptionCalendar() {
   // Access the client
@@ -39,7 +38,8 @@ export default function SubscriptionCalendar() {
     icon: '',
   });
 
-  const client = useSupabaseClient();
+  const { user } = useUser();
+  const { openSignIn } = useClerk();
 
   const addSubscription = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -55,34 +55,35 @@ export default function SubscriptionCalendar() {
       icon: platform.icon,
     };
 
-    // const result = await addsubscriptionDB(
-    //   1,
-    //   newSubscription.name,
-    //   newSubscription.cost,
-    //   newSubscription.billingCycle,
-    //   newSubscription.dueDate,
-    //   newSubscription.icon
-    // );
+    if (!user?.id) {
+      openSignIn();
+    }
 
-    // console.log(result);
-    const test = await client.from('subscriptions').insert({
-      ...newSubscription,
-    });
+    const result = await addsubscriptionDB(
+      user?.id!,
+      newSubscription.name,
+      newSubscription.cost,
+      newSubscription.cycle,
+      newSubscription.dueDate,
+      newSubscription.icon
+    );
 
-    console.log({ test });
+    console.log(result);
+    if (result) {
+      queryClient.invalidateQueries({
+        queryKey: ['subscriptions'],
+      });
+    }
   };
 
   // Queries
   const { data } = useQuery({
     queryKey: ['subscriptions'],
     queryFn: () => {
-      return getSubscriptions(1);
+      return getSubscriptions(user?.id);
     },
+    enabled: !!user?.id,
   });
-
-  const { user } = useUser();
-  // The `useSession()` hook will be used to get the Clerk `session` object
-  const { session } = useSession();
 
   return (
     <Card className="relative md:max-w-2xl mx-auto bg-background border-none w-full h-full flex-col flex justify-center items-center gap-4 p-2 py-4 overflow-y-auto rounded-none">
@@ -92,9 +93,8 @@ export default function SubscriptionCalendar() {
           Manage your subscriptions and view them on a calendar.
         </CardDescription>
       </div>
-      <div className="grid gap-6 border w-full">
+      <div className="grid gap-6 w-full">
         <div>
-          <h3 className="text-lg font-semibold mb-4">Add New Subscription</h3>
           <form onSubmit={addSubscription} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -154,8 +154,9 @@ export default function SubscriptionCalendar() {
           </form>
         </div>
       </div>
+
       <CalendarFooter
-        subscriptions={data || []}
+        subscriptions={data}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
       />

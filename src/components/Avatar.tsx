@@ -17,10 +17,18 @@ const Avatar = ({ fallback, fill, ...props }: AvatarProps) => {
   };
 
   // console.log('Avatar Props:', { fill, ...props });
+  const isValidImageUrl = (src: string) => {
+    if (!src) return false;
+    const img = new Image();
+    img.src = src;
+    return img.width > 0 && img.height > 0;
+  };
+
+  const isValidImage = isValidImageUrl(props.src || '');
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-full">
-      {props.src ? (
+      {props.src && isValidImage ? (
         <ImageWithFallback
           src={props.src || ''}
           fill={fill}

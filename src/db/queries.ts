@@ -3,20 +3,20 @@ import db from './index';
 import type { Cycle, Subscription } from '@prisma/client';
 
 export const addSubscription = async (
-  userId: number,
+  user_id: string,
   name: string,
   cost: number,
-  billingCycle: Cycle,
+  cycle: Cycle,
   dueDate: Date,
   icon?: string
 ) => {
   try {
     const subscription = await db.subscription.create({
       data: {
-        userId,
+        user_id,
         name,
         cost,
-        cycle: billingCycle,
+        cycle,
         dueDate,
         icon,
       },
@@ -34,24 +34,28 @@ export const addSubscription = async (
 export async function sanitizeData(data: any) {
   return JSON.parse(JSON.stringify(data));
 }
-
-export const getSubscriptions = async (userId: number) => {
+export const getSubscriptions = async (userId?: string) => {
   try {
+    if (!userId) {
+      return [];
+    }
+
     const subscriptions = await db.subscription.findMany({
-      where: { userId },
+      where: { user_id: userId },
     });
 
     if (!subscriptions) return [];
 
-    const data = subscriptions;
+    console.log({ data: subscriptions });
+    const data = await sanitizeData(subscriptions);
 
-    console.log({ data });
     return data;
   } catch (error) {
     console.error('Error getting subscriptions:', error);
-    throw error;
+    return [];
   }
 };
+type GetSubscriptionRreturnType = ReturnType<Awaited<typeof getSubscriptions>>;
 
 export async function removeSubscription(id: number) {
   try {

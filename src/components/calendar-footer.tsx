@@ -1,3 +1,5 @@
+'use client ';
+
 import { Button, ButtonProps } from '@/components/ui/button';
 import { Popover, PopoverTrigger } from '@radix-ui/react-popover';
 import { eachDayOfInterval, endOfMonth, startOfMonth } from 'date-fns';
@@ -15,7 +17,7 @@ import MotionNumber from 'motion-number';
 import { BRAND_LOGOS } from '@/lib/constants';
 
 type CalendarProps = {
-  subscriptions: Subscription[];
+  subscriptions?: Subscription[];
   selectedDate: Date;
   setSelectedDate: React.Dispatch<React.SetStateAction<Date>>;
 };
@@ -48,7 +50,7 @@ const CalendarFooter = ({
 
   function getFirstDayOfMonth(date: Date) {
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    console.log('test: ', firstDay.getDay());
+
     return firstDay.getDay(); // 0 for Sunday, 6 for Saturday
   }
 
@@ -210,16 +212,15 @@ const CalendarFooter = ({
           ))}
 
           {daysInMonth.map((day, index) => {
-            const subscriptionsForDay = getSubscriptionsForDay(day);
+            const subscriptionsForDay = getSubscriptionsForDay(day) || [];
 
             return (
               <div key={day.toISOString()}>
                 <Popover>
                   <PopoverTrigger asChild>
                     <CalendarButton
-                      className={`relative flex items-center justify-end bg-[#1e1e1e] ${
-                        subscriptionsForDay?.length > 0 ? '' : ''
-                      }`}
+                      className={`relative flex items-center justify-end bg-[#1e1e1e] 
+                      `}
                       onClick={() => {
                         if (subscriptionsForDay?.length > 0) {
                           handleSelectSubscriptionDate(subscriptionsForDay);
@@ -234,11 +235,14 @@ const CalendarFooter = ({
                         {subscriptionsForDay?.length > 0 ? (
                           <div
                             className={cn(
-                              'w-full flex items-end justify-center py-1 bg-[#1e1e1e] cursor-pointer'
+                              'w-full flex items-end justify-center py-1 cursor-pointer'
                             )}
                           >
                             {subscriptionsForDay
-                              .splice(0, subscriptionsForDay.length > 2 ? 2 : 1)
+                              ?.splice(
+                                0,
+                                subscriptionsForDay.length > 2 ? 2 : 1
+                              )
                               .map((sub, index) => {
                                 return (
                                   <div
@@ -265,10 +269,13 @@ const CalendarFooter = ({
                         ) : (
                           <div className="size-5"></div>
                         )}
-                        <div
-                          className="hidden md:block absolute top-2 right-1 size-2 rounded-full"
-                          style={{ background: 'rgb(94, 106, 210)' }}
-                        ></div>
+                        {subscriptionsForDay?.length > 0 ? (
+                          <div
+                            className="hidden md:block absolute top-2 right-1 size-2 rounded-full"
+                            style={{ background: 'rgb(94, 106, 210)' }}
+                          ></div>
+                        ) : null}
+
                         <span className="flex flex-col items-center justify-center">
                           {format(day, 'd')}
                         </span>
@@ -297,7 +304,7 @@ const CalendarFooter = ({
       <BottomSheet
         open={open}
         setOpen={setOpen}
-        className="outline flex flex-col md:border-4 bg-zinc-900"
+        className="outline flex flex-col bg-zinc-900"
       >
         {selectedSubscription && selectedSubscription?.length <= 0 && (
           <div className="h-full w-full text-center">no items.</div>

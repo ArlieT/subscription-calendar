@@ -1,9 +1,20 @@
-import { useSession } from '@clerk/nextjs';
+import { useSession, useUser } from '@clerk/nextjs';
 import { createClient } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 const useSupabaseClient = () => {
   // The `useSession()` hook will be used to get the Clerk `session` object
   const { session } = useSession();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    console.log(session);
+    if (!session) {
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    }
+  }, [session]);
 
   function createClerkSupabaseClient() {
     return createClient(

@@ -42,12 +42,12 @@ model Subscription {
   icon      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  user      User     @relation(fields: [user_id], references: [user_id])
+  user_id   String
 }
 
 model User {
-  id          Int            @id @default(autoincrement())
+  user_id     String         @id
   email       String         @unique
   name        String?
   subsription Subscription[]

@@ -17,8 +17,6 @@ const ImageWithFallback = (props: Props) => {
   const { src, fallbackSrc, width = 0, height = 0, fill, alt, ...rest } = props;
   const [imgSrc, setImgSrc] = useState(src);
 
-  console.log('ImageWithFallback Props:', { fill, width, height }); // Debugging: Check if fill is passed
-
   return (
     <Image
       {...rest}
