@@ -4,19 +4,21 @@ import { dark } from '@clerk/themes';
 
 const Navbar = () => {
   return (
-    <nav className="flex p-2 justify-end h-16 ">
+    <nav className="flex justify-end p-2 md:p-10 h-16 ">
       <SignedOut>
         <SignInButton>
           <Button>Sign In</Button>
         </SignInButton>
       </SignedOut>
-      <SignedIn>
-        <UserButton
-          appearance={{
-            baseTheme: dark,
-          }}
-        />
-      </SignedIn>
+      <div className="">
+        <SignedIn>
+          <UserButton
+            appearance={{
+              baseTheme: dark,
+            }}
+          />
+        </SignedIn>
+      </div>
     </nav>
   );
 };
