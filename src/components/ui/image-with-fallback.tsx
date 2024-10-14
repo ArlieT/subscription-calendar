@@ -14,8 +14,10 @@ type Props = Omit<
 };
 
 const ImageWithFallback = (props: Props) => {
-  const { src, fallbackSrc, width, height, fill, alt, ...rest } = props;
+  const { src, fallbackSrc, width = 0, height = 0, fill, alt, ...rest } = props;
   const [imgSrc, setImgSrc] = useState(src);
+
+  console.log('ImageWithFallback Props:', { fill, width, height }); // Debugging: Check if fill is passed
 
   return (
     <Image
@@ -23,9 +25,9 @@ const ImageWithFallback = (props: Props) => {
       className={cn('object-cover object-center', rest.className)}
       src={imgSrc || ''}
       alt={alt || ''}
-      fill={fill} // Conditionally apply fill
-      width={!fill ? width : undefined} // Only use width if fill is not set
-      height={!fill ? height : undefined} // Only use height if fill is not set
+      fill={fill || false} // Conditionally apply fill, fallback to false if undefined
+      width={!fill ? width : undefined} // Only use width if fill is false
+      height={!fill ? height : undefined} // Only use height if fill is false
       onError={() => {
         setImgSrc(fallbackSrc);
       }}

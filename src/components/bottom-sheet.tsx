@@ -39,8 +39,9 @@ const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
     },
   };
 
-  const modalStyles = 'md:inset-0 md:m-auto md:w-4/5 md:h-fit';
-  const bottomSheetStyles = 'inset-x-0 -bottom-[2%] w-[98%] h-auto';
+  // const modalStyles = 'md:inset-0 md:m-auto md:w-4/5 md:h-auto';
+  const modalStyles = '';
+  const bottomSheetStyles = 'rounded-b-none inset-x-0 c/-bottom-[1%] w-[98%]';
 
   return (
     <AnimatePresence>
@@ -48,7 +49,7 @@ const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
         <motion.div
           ref={ref}
           className={cn(
-            'min-h-[30%] h-auto md:max-w-[60%] max-h-[60%] w-[99%] bg-background fixed rounded-xl border-2 -bottom-[2%] inset-x-0 mx-auto ',
+            'absolute bottom-0 rounded-3xl overflow-hidden',
             modalStyles,
             bottomSheetStyles,
             props.className
@@ -57,17 +58,15 @@ const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
           initial="closed"
           animate={open ? 'open' : 'closed'}
         >
-          <div className="w-full p-1 pt-[56px] relative overflow-y-auto">
-            <div className="fixed h-[6px] w-10 top-2 inset-x-0 rounded-full mx-auto bg-white" />
-            <div>
-              <Button
-                onClick={() => setOpen(false)}
-                type="button"
-                className="absolute right-3 top-3 hidden md:block"
-              >
-                <X />
-              </Button>
-            </div>
+          <div className="w-full pt-[46px] relative overflow-y-auto">
+            <div className="block md:hidden absolute h-[6px] w-10 top-2 inset-x-0 rounded-full mx-auto bg-white" />
+            <button
+              onClick={() => setOpen(false)}
+              type="button"
+              className=" absolute right-2 top-2 hidden md:block"
+            >
+              <X className="size-5" />
+            </button>
             {children}
           </div>
         </motion.div>

@@ -1,9 +1,9 @@
 import type { Cycle } from '@prisma/client';
 export type Subscription = {
-  id: number;
+  id?: number;
   name: string;
   cost: number;
-  billingCycle: Cycle;
+  cycle: Cycle;
   dueDate: Date;
   icon?: string;
 };

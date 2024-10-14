@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
-import { Poppins } from 'next/font/google';
+import { Sora } from 'next/font/google';
 
 import './globals.css';
 import ReactQueryProvider from '@/components/provider/ReactQueryProvider';
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs';
 
-const poppins = Poppins({ weight: '400', subsets: ['latin'] });
+const sora = Sora({ weight: '400', subsets: ['latin'] });
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -37,17 +44,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${poppins.className} ${geistSans.variable} ${geistMono.variable} antialiased dark`}
-      >
-        <ReactQueryProvider>
-          <div className="h-full w-full">
-            {/* <SideBar /> */}
-            <main className="h-dvh w-full">{children}</main>
-          </div>
-        </ReactQueryProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={`dark ${sora.className} ${geistSans.variable} ${geistMono.variable}`}
+        >
+          <ReactQueryProvider>
+            <nav>
+              <SignedOut>
+                <SignInButton />
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </nav>
+            <div className="h-dvh w-full bg-background">
+              <main className="h-full w-full">{children}</main>
+            </div>
+          </ReactQueryProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

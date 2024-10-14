@@ -23,6 +23,7 @@ import { useQuery } from '@tanstack/react-query';
 import Avatar from '../Avatar';
 import useDebounce from '@/lib/hooks/useDebounce';
 import { LogoApiResponse } from 'src/types';
+import { BRAND_LOGOS } from '@/lib/constants';
 
 export const retrieveBrandDataFromBrandDev = async (domain: string) => {
   const url = 'https://api.brand.dev/v1/brand/retrieve';
@@ -66,6 +67,8 @@ export function ComboboxDemo({
   const handleChange = useDebounce((event: string) => {
     if (event) {
       setValue(event);
+    } else {
+      setValue('');
     }
   }, 300);
 
@@ -81,23 +84,28 @@ export function ComboboxDemo({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          key={value}
         >
-          {value ? logo?.brand.domain : 'select platform'}
+          {logo
+            ? logo?.brand?.domain
+            : value && !logo
+            ? value
+            : 'select platform'}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0">
-        <Command>
+        <Command className="w-full !min-w-0">
           <CommandInput
             placeholder="add domain like: netflix(.com)"
             onValueChange={handleChange}
           />
           <CommandList>
-            <CommandEmpty>
+            {/* <CommandEmpty>
               {!logo ? 'No framework found.' : 'No results found.'}
-            </CommandEmpty>
+            </CommandEmpty> */}
             <CommandGroup>
-              {logo?.status === 'ok' ? (
+              {logo?.status ? (
                 <CommandItem
                   key={value}
                   value={JSON.stringify({
@@ -113,6 +121,7 @@ export function ComboboxDemo({
                 >
                   <div className="size-5 md:size-6">
                     <Avatar
+                      fill={true}
                       src={logo?.brand.logos[0]?.url}
                       fallback={logo?.brand.domain || ''}
                       className="outline"
@@ -129,7 +138,78 @@ export function ComboboxDemo({
                     )}
                   />
                 </CommandItem>
-              ) : null}
+              ) : value ? (
+                <CommandItem
+                  key={value}
+                  value={value}
+                  onSelect={(value) => {
+                    const findLogo = BRAND_LOGOS.find((item) =>
+                      item.name.includes(value.toLowerCase())
+                    );
+                    setPlatform({
+                      name: findLogo?.name || removeDomain(value),
+                      icon: findLogo?.icon || removeDomain(value),
+                    });
+                    setValue(findLogo?.name || removeDomain(value));
+                    setOpen(false);
+                  }}
+                  className="cursor-pointer flex justify-between"
+                >
+                  <div className="flex gap-2 items-center">
+                    <div className="size-5 md:size-6">
+                      <Avatar
+                        src={
+                          BRAND_LOGOS.find((item) =>
+                            item.name.includes(value.toLowerCase())
+                          )?.icon
+                        }
+                        fill={true}
+                        fallback={value}
+                        className="outline"
+                      />
+                    </div>
+                    {value.replace(/\.com$/, '')}
+                  </div>
+                  <Check
+                    className={cn(
+                      'mr-2 h-4 w-4',
+                      removeDomain(value || '') === removeDomain(value)
+                        ? 'opacity-100'
+                        : 'opacity-0'
+                    )}
+                  />
+                </CommandItem>
+              ) : (
+                <CommandEmpty>No results found.</CommandEmpty>
+              )}
+              {!value &&
+                BRAND_LOGOS.map((item) => (
+                  <CommandItem
+                    key={item.name}
+                    value={item.name}
+                    onSelect={(value) => {
+                      setPlatform({
+                        name: removeDomain(value),
+                        icon: item.icon,
+                      });
+                      setValue(item.name);
+                      setOpen(false);
+                    }}
+                    className="cursor-pointer flex justify-between"
+                  >
+                    <div className="flex gap-2 items-center">
+                      <div className="size-5 md:size-6">
+                        <Avatar
+                          src={item.icon}
+                          fill={true}
+                          fallback={item.name}
+                          className="outline"
+                        />
+                      </div>
+                      {item.name}
+                    </div>
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>
