@@ -1,7 +1,7 @@
 export const BRAND_LOGOS = [
   {
     name: 'netflix',
-    icon: 'https://images.ctfassets.net/y2ske730sjqp/4aEQ1zAUZF5pLSDtfviWjb/ba04f8d5bd01428f6e3803cc6effaf30/Netflix_N.png?w=300',
+    icon: 'https://seeklogo.com/images/N/netflix-n-logo-0F1ED3EBEB-seeklogo.com.png',
   },
   {
     name: 'spotify',

@@ -52,7 +52,7 @@ export default function RootLayout({
           <ReactQueryProvider>
             <div className="h-dvh w-full bg-background">
               <Navbar />
-              <main className="h-auto w-full">{children}</main>
+              <main className="relative h-auto w-full">{children}</main>
             </div>
           </ReactQueryProvider>
         </body>

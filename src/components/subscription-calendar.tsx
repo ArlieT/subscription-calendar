@@ -57,10 +57,11 @@ export default function SubscriptionCalendar() {
 
     if (!user?.id) {
       openSignIn();
+      return;
     }
 
     const result = await addsubscriptionDB(
-      user?.id!,
+      user?.id,
       newSubscription.name,
       newSubscription.cost,
       newSubscription.cycle,
@@ -78,7 +79,8 @@ export default function SubscriptionCalendar() {
 
   // Queries
   const { data } = useQuery({
-    queryKey: ['subscriptions'],
+    queryKey: ['subscriptions', user?.id],
+
     queryFn: () => {
       return getSubscriptions(user?.id);
     },
@@ -86,7 +88,7 @@ export default function SubscriptionCalendar() {
   });
 
   return (
-    <Card className="relative md:max-w-2xl mx-auto bg-background border-none w-full h-full flex-col flex justify-center items-center gap-4 p-2 py-4 overflow-y-auto rounded-none">
+    <Card className="md:max-w-2xl mx-auto bg-background border-none w-full h-full flex-col flex justify-center items-center gap-4 p-2 py-4 overflow-y-auto rounded-none">
       <div className="w-full">
         <CardTitle className="p-0">Subscription Manager</CardTitle>
         <CardDescription>
@@ -154,7 +156,6 @@ export default function SubscriptionCalendar() {
           </form>
         </div>
       </div>
-
       <CalendarFooter
         subscriptions={data}
         selectedDate={selectedDate}

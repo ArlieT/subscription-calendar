@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import axios from 'axios';
 
-import { cn } from '@/lib/utils';
+import { cn, getRandomRgbColor } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -20,10 +20,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useQuery } from '@tanstack/react-query';
-import Avatar from '../Avatar';
 import useDebounce from '@/lib/hooks/useDebounce';
 import { LogoApiResponse } from 'src/types';
 import { BRAND_LOGOS } from '@/lib/constants';
+import { Avatar } from './avatar';
+import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
+import { getInitials } from '../Avatar';
 
 export const retrieveBrandDataFromBrandDev = async (domain: string) => {
   const url = 'https://api.brand.dev/v1/brand/retrieve';
@@ -101,9 +103,6 @@ export function ComboboxDemo({
             onValueChange={handleChange}
           />
           <CommandList>
-            {/* <CommandEmpty>
-              {!logo ? 'No framework found.' : 'No results found.'}
-            </CommandEmpty> */}
             <CommandGroup>
               {logo?.status ? (
                 <CommandItem
@@ -120,12 +119,10 @@ export function ComboboxDemo({
                   className="cursor-pointer flex justify-between"
                 >
                   <div className="size-5 md:size-6">
-                    <Avatar
-                      fill={true}
-                      src={logo?.brand.logos[0]?.url}
-                      fallback={logo?.brand.domain || ''}
-                      className="outline"
-                    />
+                    <Avatar>
+                      <AvatarImage src={logo?.brand.logos[0]?.url} />
+                      <AvatarFallback>{logo?.brand.title}</AvatarFallback>
+                    </Avatar>
                   </div>
                   {logo?.brand.domain.replace(/\.com$/, '')}
                   <Check
@@ -156,18 +153,22 @@ export function ComboboxDemo({
                   className="cursor-pointer flex justify-between"
                 >
                   <div className="flex gap-2 items-center">
-                    <div className="size-5 md:size-6">
-                      <Avatar
+                    <Avatar className="size-5 min-w-5 min-h-5 md:min-h-6 md:min-w-6 md:size-6">
+                      <AvatarImage
                         src={
                           BRAND_LOGOS.find((item) =>
                             item.name.includes(value.toLowerCase())
                           )?.icon
                         }
-                        fill={true}
-                        fallback={value}
-                        className="outline"
+                        alt={value}
                       />
-                    </div>
+                      <AvatarFallback
+                        style={{ backgroundColor: getRandomRgbColor() }}
+                        className="text-xs size-5 min-w-5 min-h-5 md:min-h-6 md:min-w-6 md:size-6 flex justify-center items-center"
+                      >
+                        {getInitials(value)}
+                      </AvatarFallback>
+                    </Avatar>
                     {value.replace(/\.com$/, '')}
                   </div>
                   <Check
@@ -199,12 +200,15 @@ export function ComboboxDemo({
                   >
                     <div className="flex gap-2 items-center">
                       <div className="size-5 md:size-6">
-                        <Avatar
-                          src={item.icon}
-                          fill={true}
-                          fallback={item.name}
-                          className="outline"
-                        />
+                        <Avatar className="size-4 min-w-4 min-h-4 md:min-h-6 md:min-w-6 md:size-6">
+                          <AvatarImage src={item?.icon || ''} alt={item.name} />
+                          <AvatarFallback
+                            style={{ backgroundColor: getRandomRgbColor() }}
+                            className="text-xs size-5 min-w-5 min-h-5 md:min-h-6 md:min-w-6 md:size-6 flex justify-center items-center"
+                          >
+                            {item.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
                       </div>
                       {item.name}
                     </div>

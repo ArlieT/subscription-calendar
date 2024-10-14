@@ -7,15 +7,15 @@ type AvatarProps = {
   fill?: boolean;
 } & React.ImgHTMLAttributes<HTMLImageElement>;
 
-const Avatar = ({ fallback, fill, ...props }: AvatarProps) => {
-  const getInitials = (name: string) => {
-    const names = name.trim().split(' ');
-    if (names.length === 1) {
-      return names[0].charAt(0);
-    }
-    return `${names[0].charAt(0)}${names[1].charAt(0)}`;
-  };
+export const getInitials = (name: string) => {
+  const names = name.trim().split(' ');
+  if (names.length === 1) {
+    return names[0].charAt(0);
+  }
+  return `${names[0].charAt(0)}${names[1].charAt(0)}`;
+};
 
+const Avatar = ({ fallback, fill, ...props }: AvatarProps) => {
   // console.log('Avatar Props:', { fill, ...props });
   const isValidImageUrl = (src: string) => {
     if (!src) return false;
