@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import db from "../../../db/index";
 
 interface EmailAddress {
@@ -28,14 +27,12 @@ export async function POST(request: Request) {
     if (payload.type === "user.created") {
       const email = payload.data.email_addresses[0].email_address;
 
-      const userData: Prisma.UserCreateInput = {
-        user_id: payload.data.id,
-        email: email,
-        name: payload.data.username || email,
-      };
-
       const user = await db.user.create({
-        data: userData,
+        data: {
+          user_id: payload.data.id,
+          email: email,
+          name: payload.data.username || email,
+        },
       });
 
       if (!user) {
@@ -47,7 +44,7 @@ export async function POST(request: Request) {
 
     return Response.json({ message: "Invalid payload" }, { status: 400 });
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error("Webhook error:", error);
     return Response.json(
       { message: "Internal server error", error: String(error) },
       { status: 500 }
