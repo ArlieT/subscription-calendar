@@ -1,4 +1,3 @@
-import { WebhookEvent } from "@clerk/nextjs/server";
 import { CreateUserEvent } from "src/types";
 import db from "../../../db/index";
 
@@ -15,7 +14,7 @@ export async function POST(request: Request) {
     const email = payload.data.email_addresses[0].email_address;
     const user = await db.user.create({
       data: {
-        user_id: payload.data.id,
+        user_id: payload.data.id as any,
         email: email,
         name: payload.data.username || email,
       },
