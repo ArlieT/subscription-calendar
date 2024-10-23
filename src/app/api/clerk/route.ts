@@ -1,5 +1,21 @@
-import { CreateUserEvent } from "src/types";
 import db from "../../../db/index";
+
+export interface EmailAddress {
+  email_address: string;
+  id: string;
+}
+
+export interface UserData {
+  id: string;
+  email_addresses: EmailAddress[];
+  username?: string;
+}
+
+export interface CreateUserEvent {
+  type: string;
+  data: UserData;
+}
+
 
 //clerk webhook listener
 export async function POST(request: Request) {
@@ -14,7 +30,7 @@ export async function POST(request: Request) {
     const email = payload.data.email_addresses[0].email_address;
     const user = await db.user.create({
       data: {
-        user_id: payload.data.id as any,
+        user_id: payload.data.id,
         email: email,
         name: payload.data.username || email,
       },
