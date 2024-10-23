@@ -1,15 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { PlusCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardDescription, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ComboboxDemo } from '@/components/ui/combo-box';
-
-import { Subscription } from 'src/types';
-import { DatePicker } from './ui/date-picker';
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { ComboboxDemo } from "@/components/ui/combo-box";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { Cycle } from "@prisma/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { PlusCircle } from "lucide-react";
+import React, { useState } from "react";
+import {
+  addSubscription as addsubscriptionDB,
+  getSubscriptions,
+} from "src/db/queries";
+import { Subscription } from "src/types";
+import CalendarFooter from "./calendar-footer";
+import Toast from "./toat";
+import { DatePicker } from "./ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -17,25 +25,30 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from './ui/select';
-import CalendarFooter from './calendar-footer';
-import {
-  addSubscription as addsubscriptionDB,
-  getSubscriptions,
-} from 'src/db/queries';
-import { Cycle } from '@prisma/client';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useClerk, useUser } from '@clerk/nextjs';
+} from "./ui/select";
+
+type ToastState = {
+  isOpen: boolean;
+  text: string;
+  header?: string;
+  status: "success" | "error";
+};
 
 export default function SubscriptionCalendar() {
   // Access the client
   const queryClient = useQueryClient();
+  const [toast, setToast] = useState<ToastState>({
+    isOpen: false,
+    text: "",
+    status: "success",
+    header: "",
+  });
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>(new Date());
   const [billingCycle, setBillingCycle] = useState<Cycle>(Cycle.MONTHLY);
   const [platform, setPlatformIcon] = useState({
-    name: '',
-    icon: '',
+    name: "",
+    icon: "",
   });
 
   const { user } = useUser();
@@ -49,7 +62,7 @@ export default function SubscriptionCalendar() {
 
     const newSubscription: Subscription = {
       name: platform.name,
-      cost: parseFloat(formData.get('cost') as string),
+      cost: parseFloat(formData.get("cost") as string),
       cycle: billingCycle,
       dueDate: new Date(dueDate),
       icon: platform.icon,
@@ -69,17 +82,28 @@ export default function SubscriptionCalendar() {
       newSubscription.icon
     );
 
-    console.log(result);
-    if (result) {
-      queryClient.invalidateQueries({
-        queryKey: ['subscriptions'],
+    if (!result.error) {
+      setToast({
+        isOpen: true,
+        text: "Subscriptions added!",
+        status: "success",
+      });
+    } else {
+      setToast({
+        isOpen: true,
+        text: "Something went wrong! please try again.",
+        status: "error",
       });
     }
+
+    queryClient.invalidateQueries({
+      queryKey: ["subscriptions"],
+    });
   };
 
   // Queries
   const { data } = useQuery({
-    queryKey: ['subscriptions', user?.id],
+    queryKey: ["subscriptions", user?.id],
 
     queryFn: () => {
       return getSubscriptions(user?.id);
@@ -156,11 +180,21 @@ export default function SubscriptionCalendar() {
           </form>
         </div>
       </div>
+
       <CalendarFooter
         subscriptions={data}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
       />
+      <Toast.Root
+        isOpen={toast.isOpen}
+        closeToast={() => setToast((prev) => ({ ...prev, isOpen: false }))}
+        status={toast.status}
+      >
+        <Toast.Header>{toast.header}</Toast.Header>
+
+        <Toast.Body>{toast.text || ""}</Toast.Body>
+      </Toast.Root>
     </Card>
   );
 }

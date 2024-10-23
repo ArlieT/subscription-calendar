@@ -1,18 +1,17 @@
-import { Button, ButtonProps } from '@/components/ui/button';
-import { Popover, PopoverTrigger } from '@radix-ui/react-popover';
-import { eachDayOfInterval, endOfMonth, startOfMonth } from 'date-fns';
-import { ChevronLeft, ChevronRight, Trash } from 'lucide-react';
-import { format } from 'date-fns';
-import React, { useMemo } from 'react';
-import { cn, getRandomRgbColor } from '@/lib/utils';
-import { motion } from 'framer-motion';
-import { BottomSheet } from './bottom-sheet';
-import { Cycle, Subscription } from '@prisma/client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { removeSubscription } from 'src/db/queries';
-import MotionNumber from 'motion-number';
-import { AvatarImage, AvatarFallback } from '@radix-ui/react-avatar';
-import { Avatar } from './ui/avatar';
+import { Button, ButtonProps } from "@/components/ui/button";
+import { cn, getRandomRgbColor } from "@/lib/utils";
+import { Subscription } from "@prisma/client";
+import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { eachDayOfInterval, endOfMonth, format, startOfMonth } from "date-fns";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Trash } from "lucide-react";
+import MotionNumber from "motion-number";
+import React, { useState } from "react";
+import { removeSubscription } from "src/db/queries";
+import { BottomSheet } from "./bottom-sheet";
+import { Avatar } from "./ui/avatar";
 
 type CalendarProps = {
   subscriptions?: Subscription[];
@@ -41,23 +40,19 @@ const CalendarFooter = ({
   const daysInMonth = getDaysInMonth(selectedDate);
 
   const getSubscriptionsForDay = (day: Date) => {
-    if (!subscriptions || subscriptions.length < 1) return;
+    // if (!subscriptions || subscriptions.length < 1) return;
 
-    const currentDay = format(day, 'yyyy-MM-dd');
-    console.log('Current Day:', currentDay);
+    const currentDay = format(day, "yyyy-MM-dd");
 
-    const filteredSubs = subscriptions.filter((sub) => {
-      const formattedDueDate = format(new Date(sub.dueDate), 'yyyy-MM-dd');
+    const filteredSubs = subscriptions?.filter((sub) => {
+      const formattedDueDate = format(new Date(sub.dueDate), "yyyy-MM-dd");
       const isMatch = formattedDueDate === currentDay;
-      console.log(`Matching ${formattedDueDate} === ${currentDay}:`, isMatch); // Log comparison result
+
       return isMatch;
     });
 
-    console.log({ filteredSubs });
     return filteredSubs;
   };
-
-  console.log({ subscriptions });
 
   function getFirstDayOfMonth(date: Date) {
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -71,7 +66,6 @@ const CalendarFooter = ({
   }
 
   const handleSelectSubscriptionDate = (selected: Subscription[]) => {
-    console.log(selected);
     setSelectedSubscription(selected);
     setOpen(true);
   };
@@ -79,15 +73,24 @@ const CalendarFooter = ({
   const mutation = useMutation({
     mutationFn: removeSubscription,
     onSuccess: (id) => {
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
 
-      if (!('error' in id)) {
+      if (!("error" in id)) {
         setSelectedSubscription((e) => {
           return e ? e.filter((sub) => sub.id !== id.id) : e;
         });
       }
     },
   });
+
+  const handleDelete = (id: number) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this subscription?"
+    );
+    if (confirmed) {
+      mutation.mutate(id);
+    }
+  };
 
   const handleNextMonth = () => {
     setIsFromLeft(true);
@@ -120,8 +123,58 @@ const CalendarFooter = ({
   };
 
   const totalMonthlyCost = subscriptions?.reduce((total, sub) => {
-    return total + (sub.cycle === Cycle.MONTHLY ? sub.cost : sub.cost / 12);
+    const subscriptionMonth = new Date(sub.dueDate).getMonth();
+    const subscriptionYear = new Date(sub.dueDate).getFullYear();
+    if (
+      selectedDate.getMonth() === subscriptionMonth &&
+      selectedDate.getFullYear() === subscriptionYear
+    ) {
+      return total + sub.cost;
+    } else {
+      return total;
+    }
   }, 0);
+
+  const [totalCost, setTotalCost] = useState(0);
+
+  //   useEffect(() => {
+  //     const calculateTotalCost = () => {
+  //       if (!subscriptions || subscriptions.length === 0) return; // Check if subscriptions exist
+
+  //       const startDate = new Date(subscriptions[0].createdAt); // Start date from subscription
+  //       const costPerCycle = subscriptions[0].cost || 0; // Assuming you have a 'cost' property for cost per cycle
+  //       const cycleType = subscriptions[0].cycle; // Assuming you have a cycleType property ('monthly' or 'yearly')
+
+  //       // Ensure selectedDate is a valid date
+  //       const currentDate =
+  //         selectedDate instanceof Date ? selectedDate : new Date();
+
+  //       // Calculate total cycles based on cycle type
+  //       let totalCycles;
+
+  //       if (cycleType === "YEARLY") {
+  //         // Calculate total years, ensuring to include the current year
+  //         totalCycles =
+  //           Math.floor(
+  //             (Number(currentDate) - Number(startDate)) /
+  //               (1000 * 60 * 60 * 24 * 365)
+  //           ) + 1; // Add 1 to include the current year
+  //       } else {
+  //         // Calculate total months, ensuring to include the current month
+  //         totalCycles =
+  //           Math.floor(
+  //             (Number(currentDate) - Number(startDate)) /
+  //               (1000 * 60 * 60 * 24 * 30)
+  //           ) + 1; // Add 1 to include the current month
+  //       }
+
+  //       const totalExpense = totalCycles * costPerCycle;
+
+  //       setTotalCost(totalExpense);
+  //     };
+
+  //     calculateTotalCost();
+  //   }, [subscriptions, selectedDate]); // Add subscriptions to the dependency array
 
   return (
     <>
@@ -143,7 +196,7 @@ const CalendarFooter = ({
         <div className="flex w-full items-center mx-auto justify-center ">
           <motion.div
             key={selectedDate.toDateString()} // Add the key prop to trigger re-render on date change
-            initial={isFromLeft ? 'fromAbove' : 'fromBelow'}
+            initial={isFromLeft ? "fromAbove" : "fromBelow"}
             animate="visible"
             variants={{
               visible: {
@@ -162,10 +215,10 @@ const CalendarFooter = ({
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-xl text-center text-zinc-300 md:text-3xl tracking-wider font-bold">
-              <span className="inline">{format(selectedDate, 'MMMM')}</span>
+              <span className="inline">{format(selectedDate, "MMMM")}</span>
 
               <span className="text-gray-400 mx-4 font">
-                {format(selectedDate, 'yyyy')}
+                {format(selectedDate, "yyyy")}
               </span>
             </h1>
           </motion.div>
@@ -173,17 +226,17 @@ const CalendarFooter = ({
         <div className="flex items-center gap-x-8">
           <div className="flex flex-col">
             <span className="text-zinc-500 md:whitespace-nowrap">
-              Monthly Spend
+              Monthly Expenses
             </span>
             <div className="w-full text-right text-secondary">
               <MotionNumber
                 value={Math.floor(totalMonthlyCost || 0)}
                 format={{
-                  style: 'currency',
-                  currency: 'PHP',
-                  compactDisplay: 'short',
-                  notation: 'standard',
-                  roundingMode: 'floor',
+                  style: "currency",
+                  currency: "PHP",
+                  compactDisplay: "short",
+                  notation: "standard",
+                  roundingMode: "floor",
                 }}
                 className="text-foreground text-lg w-full"
               />
@@ -192,7 +245,7 @@ const CalendarFooter = ({
         </div>
       </div>
       <div className="w-full grid grid-cols-7 gap-1 md:gap-2">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div
             key={day}
             className="text-xs uppercase w-full text-white text-center bg-[#323232] py-2 px-0/5 rounded-full"
@@ -205,12 +258,12 @@ const CalendarFooter = ({
       <motion.div
         key={selectedDate.toDateString()}
         variants={variants}
-        initial={isFromLeft ? 'fromLeft' : 'fromRight'}
+        initial={isFromLeft ? "fromLeft" : "fromRight"}
         className="w-full"
         animate="visible"
         transition={{
           duration: 0.5,
-          type: 'spring',
+          type: "spring",
           stiffness: 100,
           damping: 20,
         }}
@@ -231,7 +284,6 @@ const CalendarFooter = ({
 
           {daysInMonth.map((day, index) => {
             const subscriptionsForDay = getSubscriptionsForDay(day) || [];
-            const hasSubsriptions = subscriptionsForDay?.length > 0;
 
             const bgColor = getRandomRgbColor();
 
@@ -242,11 +294,9 @@ const CalendarFooter = ({
                     <CalendarButton
                       className={`relative flex items-center bg-[#1e1e1e]`}
                       onClick={() => {
-                        if (hasSubsriptions) {
-                          setSelectedSubscription(subscriptions || []);
-                          setOpen(true);
-                          // handleSelectSubscriptionDate(subscriptionsForDay);
-                        }
+                        if (!subscriptionsForDay.length) return;
+                        setSelectedSubscription(subscriptionsForDay);
+                        setOpen(true);
                       }}
                     >
                       <motion.div
@@ -257,24 +307,24 @@ const CalendarFooter = ({
                         {subscriptionsForDay?.length > 0 ? (
                           <div
                             className={cn(
-                              'w-full flex items-end justify-center py-1 cursor-pointer'
+                              "w-full flex items-end justify-center py-1 cursor-pointer"
                             )}
                           >
-                            {subscriptionsForDay
+                            {[...subscriptionsForDay]
                               ?.splice(
                                 0,
                                 subscriptionsForDay.length > 2 ? 2 : 1
                               )
-                              .map((sub, index) => {
+                              .map((subcription, index) => {
                                 return (
                                   <div
-                                    key={sub.id}
-                                    className={cn(' rounded-full -mr-1')}
+                                    key={subcription.id}
+                                    className={cn(" rounded-full -mr-1")}
                                   >
                                     <Avatar className="size-4 min-w-4 min-h-4 md:min-h-6 md:min-w-6 md:size-6">
                                       <AvatarImage
-                                        src={sub?.icon || ''}
-                                        alt={sub.name}
+                                        src={subcription?.icon || ""}
+                                        alt={subcription.name}
                                       />
                                       <AvatarFallback></AvatarFallback>
                                       <AvatarFallback
@@ -283,7 +333,7 @@ const CalendarFooter = ({
                                         }}
                                         className="w-full text-[10px] flex justify-center items-center pt-0.5"
                                       >
-                                        {sub.name.charAt(0)}
+                                        {subcription.name.charAt(0)}
                                       </AvatarFallback>
                                     </Avatar>
                                   </div>
@@ -303,13 +353,13 @@ const CalendarFooter = ({
                             className="md:block absolute top-2 right-1 size-2 rounded-full"
                             style={{
                               background:
-                                'linear-gradient(135deg, rgb(94, 106, 210), rgb(140, 160, 250))',
+                                "linear-gradient(135deg, rgb(94, 106, 210), rgb(140, 160, 250))",
                             }}
                           ></div>
                         ) : null}
 
                         <span className="flex flex-col items-center justify-center text-[10px] md:text-base">
-                          {format(day, 'd')}
+                          {format(day, "d")}
                         </span>
                       </motion.div>
                     </CalendarButton>
@@ -342,13 +392,12 @@ const CalendarFooter = ({
           <div className="h-full w-full text-center">no items.</div>
         )}
         {selectedSubscription?.map((sub, index) => {
-          console.log(sub);
           const isLast = selectedSubscription?.length === index + 1;
           return (
             <div
               key={sub.id}
-              className={cn('w-full flex gap-2', {
-                'border-b pb-2 p-1':
+              className={cn("w-full flex gap-2", {
+                "border-b pb-2 p-1":
                   selectedSubscription &&
                   !isLast &&
                   selectedSubscription?.length > 1,
@@ -357,9 +406,9 @@ const CalendarFooter = ({
               <dl className="w-full space-y-1 p-2">
                 <div className="flex gap-x-2 items-center justify-between w-full">
                   <div className="flex gap-x-2 items-center">
-                    <dt key={sub.id} className={cn('rounded-full -mr-1')}>
+                    <dt key={sub.id} className={cn("rounded-full -mr-1")}>
                       <Avatar className="size-6 min-w-6 min-h-6 md:min-h-6 md:min-w-6 md:size-6 ">
-                        <AvatarImage src={sub?.icon || ''} alt={sub.name} />
+                        <AvatarImage src={sub?.icon || ""} alt={sub.name} />
                         <AvatarFallback></AvatarFallback>
                         <AvatarFallback
                           style={{ backgroundColor: getRandomRgbColor() }}
@@ -373,8 +422,8 @@ const CalendarFooter = ({
                   </div>
                   <Button
                     variant="destructive"
-                    className="size-8 p-0 md:size-8"
-                    onClick={() => mutation.mutate(sub.id)}
+                    className="w-auto px-4 md:size-12 md:max-h-10"
+                    onClick={() => handleDelete(sub.id)}
                   >
                     <Trash className="size-4 md:size-4" />
                   </Button>
@@ -386,12 +435,30 @@ const CalendarFooter = ({
                   </dd>
                 </div>
                 <div className="flex justify-between w-full">
-                  <dd>Every &nbsp;{format(sub.dueDate, 'io')}</dd>
-                  <dd className="text-foreground/70">Nexth payment</dd>
+                  {sub.cycle === "MONTHLY" ? (
+                    <>
+                      <dd>Every &nbsp;{format(sub.dueDate, "io")}</dd>
+                      <dd className="text-foreground/70">Nexth payment</dd>
+                    </>
+                  ) : (
+                    <>
+                      <dd>
+                        {format(
+                          new Date(
+                            new Date(sub.dueDate).setFullYear(
+                              new Date(sub.dueDate).getFullYear() + 1
+                            )
+                          ),
+                          "dd MMM yyyy"
+                        )}
+                      </dd>
+                      <dd className="text-foreground/70">Nexth payment</dd>
+                    </>
+                  )}
                 </div>
                 <div className="flex justify-between w-full">
-                  <dd>Total since {format(sub.createdAt, 'dd MMM yyyy')} </dd>
-                  <dd className="text-foreground/70">{sub.cost}</dd>
+                  <dd>Total since {format(sub.createdAt, "dd MMM yyyy")} </dd>
+                  <dd className="text-foreground/70">{totalCost}</dd>
                 </div>
               </dl>
             </div>
@@ -402,7 +469,7 @@ const CalendarFooter = ({
   );
 };
 
-CalendarFooter.displayName = 'CalendarFooter';
+CalendarFooter.displayName = "CalendarFooter";
 
 export default CalendarFooter;
 
@@ -414,7 +481,7 @@ const CalendarButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         variant={variant}
         className={cn(
-          'relative !py-0 aspect-square rounded-2xl border-none shadow-sm w-full h-full md:max-h-24 md:max-w-28 max-h-[80px] max-w-[90px]',
+          "relative !py-0 aspect-square rounded-2xl border-none shadow-sm w-full h-full md:max-h-24 md:max-w-28 max-h-[80px] max-w-[90px]",
           className
         )}
       >
@@ -424,4 +491,4 @@ const CalendarButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 
-CalendarButton.displayName = 'CalendarButton';
+CalendarButton.displayName = "CalendarButton";
