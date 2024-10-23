@@ -32,7 +32,14 @@ export async function POST(request: Request) {
           user_id: payload.data.id,
           email: email,
           name: payload.data.username || email,
+          subscription:{
+            create:[]
+          }
+
         },
+        include:{
+            subscription:true
+        }
       });
 
       if (!user) {
