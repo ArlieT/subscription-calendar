@@ -1,19 +1,18 @@
-import db from "../../../db/index";
+import { NextResponse } from 'next/server';
+import prisma from "../../../db/index";
 
 interface EmailAddress {
   email_address: string;
   id: string;
 }
 
-interface ClerkUser {
-  id: string;
-  email_addresses: EmailAddress[];
-  username?: string | null;
-}
-
 interface ClerkWebhookEvent {
   type: string;
-  data: ClerkUser;
+  data: {
+    id: string;
+    email_addresses: EmailAddress[];
+    username?: string | null;
+  };
 }
 
 export async function POST(request: Request) {
@@ -21,44 +20,42 @@ export async function POST(request: Request) {
     const payload = (await request.json()) as ClerkWebhookEvent;
 
     if (!payload) {
-      return Response.json({ message: "No payload" });
+      return NextResponse.json({ message: "No payload" });
     }
 
     if (payload.type === "user.created") {
       const email = payload.data.email_addresses[0].email_address;
 
-      const user = await db.user.create({
+      // Simplified user creation
+      const user = await prisma.user.create({
         data: {
           user_id: payload.data.id,
           email: email,
-          name: payload.data.username || email,
-          subscription:{
-            create:[]
-          }
-
-        },
-        include:{
-            subscription:true
+          name: payload.data.username || email
         }
       });
 
-      if (!user) {
-        return Response.json({ message: "Error creating user" });
-      }
+      console.log('Created user:', user);
 
-      return Response.json({ message: "Received" });
+      return NextResponse.json({
+        message: "User created successfully",
+        user: user
+      });
     }
 
-    return Response.json({ message: "Invalid payload" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid payload" }, { status: 400 });
   } catch (error) {
-    console.error("Webhook error:", error);
-    return Response.json(
-      { message: "Internal server error", error: String(error) },
+    console.error('Webhook error:', error);
+    return NextResponse.json(
+      {
+        message: "Internal server error",
+        error: String(error)
+      },
       { status: 500 }
     );
   }
 }
 
 export async function GET() {
-  return Response.json({ message: "Hello World!" });
+  return NextResponse.json({ message: "Hello World!" });
 }
