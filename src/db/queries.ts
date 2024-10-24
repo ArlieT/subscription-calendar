@@ -1,5 +1,5 @@
 "use server";
-import type { Cycle, Subscription } from "@prisma/client";
+import type { Cycle } from "@prisma/client";
 import db from "./index";
 
 export const addSubscription = async (
@@ -14,61 +14,55 @@ export const addSubscription = async (
     const currentMonth = new Date().getMonth(); // 0-11 for Jan-Dec
     const currentYear = new Date().getFullYear();
     const exactDay = dueDate.getDate(); // Get the day of the month
-    const createdSubscriptions: Subscription[] = [];
+    const subscriptionsToCreate = [];
 
     if (cycle === "MONTHLY") {
-      // Loop through the months starting from the current month to nextyear of the same month and date
       for (let i = 0; i < 12; i++) {
-        const monthIndex = (currentMonth + i) % 12; // Wrap around to stay within 0-11
-        const yearOffset = Math.floor((currentMonth + i) / 12); // Increment year after December
+        const monthIndex = (currentMonth + i) % 12;
+        const yearOffset = Math.floor((currentMonth + i) / 12);
+        const nextDueDate = new Date(
+          currentYear + yearOffset,
+          monthIndex,
+          exactDay
+        );
 
-        // Create a new date for the next due date
-        const nextDueDate = new Date(currentYear + yearOffset, monthIndex, exactDay);
-
-        // Check if the nextDueDate is valid for the month
         if (nextDueDate.getDate() !== exactDay) {
-          // If not valid, adjust to the last day of the month
-          nextDueDate.setMonth(monthIndex + 1, 0); // Set to the last day of the month
+          nextDueDate.setMonth(monthIndex + 1, 0);
         }
 
-        // Create the subscription in the database
-        const result = await db.subscription.create({
-          data: {
-            user_id,
-            name,
-            cost,
-            cycle,
-            dueDate: nextDueDate,
-            icon,
-          },
+        subscriptionsToCreate.push({
+          user_id,
+          name,
+          cost,
+          cycle,
+          dueDate: nextDueDate,
+          icon,
         });
-        createdSubscriptions.push(result);
       }
     } else {
-      // For yearly subscriptions
       for (let i = 0; i <= 1; i++) {
-        const nextDueDate = new Date(dueDate); // Create a new instance of dueDate
+        const nextDueDate = new Date(dueDate);
         nextDueDate.setFullYear(nextDueDate.getFullYear() + i);
 
-        // Create the subscription in the database
-        const result = await db.subscription.create({
-          data: {
-            user_id,
-            name,
-            cost,
-            cycle,
-            dueDate: nextDueDate,
-            icon,
-          },
+        subscriptionsToCreate.push({
+          user_id,
+          name,
+          cost,
+          cycle,
+          dueDate: nextDueDate,
+          icon,
         });
-        createdSubscriptions.push(result);
       }
     }
+
+    const result = await db.subscription.createMany({
+      data: subscriptionsToCreate,
+    });
 
     return {
       success: true,
       message: "Subscriptions added successfully",
-      data: createdSubscriptions,
+      data: result,
     };
   } catch (error) {
     console.error("Error adding subscription:", error);
@@ -78,7 +72,6 @@ export const addSubscription = async (
     };
   }
 };
-
 
 export async function sanitizeData(data: any) {
   return JSON.parse(JSON.stringify(data));
