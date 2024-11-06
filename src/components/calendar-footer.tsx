@@ -6,12 +6,13 @@ import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from "date-fns";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Trash } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import MotionNumber from "motion-number";
-import React, { useState } from "react";
-import { removeSubscription } from "src/db/queries";
+import React from "react";
+import { removeSubscription } from "src/db/subscriptions";
 import { BottomSheet } from "./bottom-sheet";
 import { Avatar } from "./ui/avatar";
+import BottomSheetContent from "./bottom-sheet-content";
 
 type CalendarProps = {
   subscriptions?: Subscription[];
@@ -70,9 +71,28 @@ const CalendarFooter = ({
     setOpen(true);
   };
 
+  const handleNextMonth = () => {
+    setIsFromLeft(true);
+    setSelectedDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setMonth(newDate.getMonth() + 1);
+      return newDate;
+    });
+  };
+
   const mutation = useMutation({
     mutationFn: removeSubscription,
     onSuccess: (id) => {
+      /*************  ✨ Codeium Command ⭐  *************/
+      /**
+       * onSuccess callback for the removeSubscription mutation. Invalidates the
+       * "subscriptions" query and removes the deleted subscription from the
+       * selectedSubscriptions state if there is no error.
+       *
+       * @param {{ id: number } | { error: unknown }} id - response from the
+       *   removeSubscription mutation
+       */
+      /******  bb6dfd76-cbdc-4941-87a0-202007f43231  *******/
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
 
       if (!("error" in id)) {
@@ -90,15 +110,6 @@ const CalendarFooter = ({
     if (confirmed) {
       mutation.mutate(id);
     }
-  };
-
-  const handleNextMonth = () => {
-    setIsFromLeft(true);
-    setSelectedDate((prev) => {
-      const newDate = new Date(prev);
-      newDate.setMonth(newDate.getMonth() + 1);
-      return newDate;
-    });
   };
 
   const [isFromLeft, setIsFromLeft] = React.useState<boolean>(true);
@@ -134,47 +145,6 @@ const CalendarFooter = ({
       return total;
     }
   }, 0);
-
-  const [totalCost, setTotalCost] = useState(0);
-
-  //   useEffect(() => {
-  //     const calculateTotalCost = () => {
-  //       if (!subscriptions || subscriptions.length === 0) return; // Check if subscriptions exist
-
-  //       const startDate = new Date(subscriptions[0].createdAt); // Start date from subscription
-  //       const costPerCycle = subscriptions[0].cost || 0; // Assuming you have a 'cost' property for cost per cycle
-  //       const cycleType = subscriptions[0].cycle; // Assuming you have a cycleType property ('monthly' or 'yearly')
-
-  //       // Ensure selectedDate is a valid date
-  //       const currentDate =
-  //         selectedDate instanceof Date ? selectedDate : new Date();
-
-  //       // Calculate total cycles based on cycle type
-  //       let totalCycles;
-
-  //       if (cycleType === "YEARLY") {
-  //         // Calculate total years, ensuring to include the current year
-  //         totalCycles =
-  //           Math.floor(
-  //             (Number(currentDate) - Number(startDate)) /
-  //               (1000 * 60 * 60 * 24 * 365)
-  //           ) + 1; // Add 1 to include the current year
-  //       } else {
-  //         // Calculate total months, ensuring to include the current month
-  //         totalCycles =
-  //           Math.floor(
-  //             (Number(currentDate) - Number(startDate)) /
-  //               (1000 * 60 * 60 * 24 * 30)
-  //           ) + 1; // Add 1 to include the current month
-  //       }
-
-  //       const totalExpense = totalCycles * costPerCycle;
-
-  //       setTotalCost(totalExpense);
-  //     };
-
-  //     calculateTotalCost();
-  //   }, [subscriptions, selectedDate]); // Add subscriptions to the dependency array
 
   return (
     <>
@@ -292,7 +262,7 @@ const CalendarFooter = ({
                 <Popover>
                   <PopoverTrigger asChild>
                     <CalendarButton
-                      className={`relative flex items-center bg-[#1e1e1e]`}
+                      className={`relative bg-[#1e1e1e] p-0`}
                       onClick={() => {
                         if (!subscriptionsForDay.length) return;
                         setSelectedSubscription(subscriptionsForDay);
@@ -302,24 +272,22 @@ const CalendarFooter = ({
                       <motion.div
                         key={index}
                         whileHover="hover"
-                        className="group min-w-full h-full w-full flex flex-col justify-end md:justify-center items-center"
+                        className="group min-w-full w-max h-full flex items-center justify-center"
                       >
                         {subscriptionsForDay?.length > 0 ? (
                           <div
                             className={cn(
-                              "w-full flex items-end justify-center py-1 cursor-pointer"
+                              "w-full flex flex-1 justify-center md:mb-3 py-1 cursor-pointer"
                             )}
                           >
+                            {/* only show the first three subscriptions */}
                             {[...subscriptionsForDay]
-                              ?.splice(
-                                0,
-                                subscriptionsForDay.length > 2 ? 2 : 1
-                              )
+                              ?.splice(0, 2)
                               .map((subcription, index) => {
                                 return (
                                   <div
                                     key={subcription.id}
-                                    className={cn(" rounded-full -mr-1")}
+                                    className={cn("rounded-full -mr-1")}
                                   >
                                     <Avatar className="size-4 min-w-4 min-h-4 md:min-h-6 md:min-w-6 md:size-6">
                                       <AvatarImage
@@ -345,20 +313,11 @@ const CalendarFooter = ({
                               </div>
                             )}
                           </div>
-                        ) : (
-                          <div className="size-5"></div>
-                        )}
-                        {subscriptionsForDay?.length > 0 ? (
-                          <div
-                            className="md:block absolute top-2 right-1 size-2 rounded-full"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, rgb(94, 106, 210), rgb(140, 160, 250))",
-                            }}
-                          ></div>
                         ) : null}
-
-                        <span className="flex flex-col items-center justify-center text-[10px] md:text-base">
+                        <SubscriptionIndicator
+                          subscriptionForDayCount={subscriptionsForDay.length}
+                        />
+                        <span className="flex flex-col flex-1 absolute bottom-0 md:bottom-2 items-center justify-center text-[10px] md:text-base">
                           {format(day, "d")}
                         </span>
                       </motion.div>
@@ -380,7 +339,6 @@ const CalendarFooter = ({
               {index + 1}
             </CalendarButton>
           ))}
-          {/* <div className="row-start-6 h-1  outline"></div> */}
         </div>
       </motion.div>
       <BottomSheet
@@ -394,74 +352,13 @@ const CalendarFooter = ({
         {selectedSubscription?.map((sub, index) => {
           const isLast = selectedSubscription?.length === index + 1;
           return (
-            <div
+            <BottomSheetContent
+              sub={sub}
               key={sub.id}
-              className={cn("w-full flex gap-2", {
-                "border-b pb-2 p-1":
-                  selectedSubscription &&
-                  !isLast &&
-                  selectedSubscription?.length > 1,
-              })}
-            >
-              <dl className="w-full space-y-1 p-2">
-                <div className="flex gap-x-2 items-center justify-between w-full">
-                  <div className="flex gap-x-2 items-center">
-                    <dt key={sub.id} className={cn("rounded-full -mr-1")}>
-                      <Avatar className="size-6 min-w-6 min-h-6 md:min-h-6 md:min-w-6 md:size-6 ">
-                        <AvatarImage src={sub?.icon || ""} alt={sub.name} />
-                        <AvatarFallback></AvatarFallback>
-                        <AvatarFallback
-                          style={{ backgroundColor: getRandomRgbColor() }}
-                          className="rounded-full w-full flex justify-center items-center"
-                        >
-                          {sub.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </dt>
-                    <dd className="ml-2 font-bold text-lg">{sub.name}</dd>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    className="w-auto px-4 md:size-12 md:max-h-10"
-                    onClick={() => handleDelete(sub.id)}
-                  >
-                    <Trash className="size-4 md:size-4" />
-                  </Button>
-                </div>
-                <div className="flex w-full justify-between">
-                  <dd>cost</dd>
-                  <dd className="font-bold text-lg tabular-nums">
-                    ${sub.cost.toFixed(2)}
-                  </dd>
-                </div>
-                <div className="flex justify-between w-full">
-                  {sub.cycle === "MONTHLY" ? (
-                    <>
-                      <dd>Every &nbsp;{format(sub.dueDate, "io")}</dd>
-                      <dd className="text-foreground/70">Nexth payment</dd>
-                    </>
-                  ) : (
-                    <>
-                      <dd>
-                        {format(
-                          new Date(
-                            new Date(sub.dueDate).setFullYear(
-                              new Date(sub.dueDate).getFullYear() + 1
-                            )
-                          ),
-                          "dd MMM yyyy"
-                        )}
-                      </dd>
-                      <dd className="text-foreground/70">Nexth payment</dd>
-                    </>
-                  )}
-                </div>
-                <div className="flex justify-between w-full">
-                  <dd>Total since {format(sub.createdAt, "dd MMM yyyy")} </dd>
-                  <dd className="text-foreground/70">{totalCost}</dd>
-                </div>
-              </dl>
-            </div>
+              isLast={isLast}
+              selectedSubscription={selectedSubscription}
+              handleDelete={handleDelete}
+            />
           );
         })}
       </BottomSheet>
@@ -492,3 +389,19 @@ const CalendarButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 
 CalendarButton.displayName = "CalendarButton";
+
+const SubscriptionIndicator = ({
+  subscriptionForDayCount,
+}: {
+  subscriptionForDayCount: number;
+}) => {
+  return subscriptionForDayCount > 0 ? (
+    <div
+      className="md:block absolute top-2 right-2 size-2 rounded-full"
+      style={{
+        background:
+          "linear-gradient(135deg, rgb(94, 106, 210), rgb(140, 160, 250))",
+      }}
+    ></div>
+  ) : null;
+};
