@@ -13,7 +13,7 @@ import React, { useState } from "react";
 import {
   addSubscription as addsubscriptionDB,
   getSubscriptions,
-} from "src/db/queries";
+} from "src/db/subscriptions";
 import { Subscription } from "src/types";
 import CalendarFooter from "./calendar-footer";
 import Toast from "./toat";

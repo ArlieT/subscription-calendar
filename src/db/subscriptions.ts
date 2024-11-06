@@ -1,6 +1,6 @@
 "use server";
 import type { Cycle } from "@prisma/client";
-import db from "./index";
+import db from "./prisma";
 
 export const addSubscription = async (
   user_id: string,

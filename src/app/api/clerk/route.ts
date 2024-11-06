@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from "../../../db/index";
+import prisma from "../../../db/prisma";
 
 interface EmailAddress {
   email_address: string;
