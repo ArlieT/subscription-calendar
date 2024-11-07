@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import axios from 'axios';
+import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import axios from "axios";
 
-import { cn, getRandomRgbColor } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { cn, getInitials, getRandomRgbColor } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -13,22 +13,21 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { useQuery } from '@tanstack/react-query';
-import useDebounce from '@/lib/hooks/useDebounce';
-import { LogoApiResponse } from 'src/types';
-import { BRAND_LOGOS } from '@/lib/constants';
-import { Avatar } from './avatar';
-import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import { getInitials } from '../Avatar';
+} from "@/components/ui/popover";
+import { useQuery } from "@tanstack/react-query";
+import useDebounce from "@/lib/hooks/useDebounce";
+import { LogoApiResponse } from "src/types";
+import { BRAND_LOGOS } from "@/lib/constants";
+import { Avatar } from "./avatar";
+import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 export const retrieveBrandDataFromBrandDev = async (domain: string) => {
-  const url = 'https://api.brand.dev/v1/brand/retrieve';
+  const url = "https://api.brand.dev/v1/brand/retrieve";
   const API_KEY = process.env.NEXT_PUBLIC_BRAND_API_KEY;
 
   try {
@@ -37,14 +36,14 @@ export const retrieveBrandDataFromBrandDev = async (domain: string) => {
         domain: domain,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${API_KEY}`,
       },
     });
 
     return response.data;
   } catch (error) {
-    console.error('Error retrieving brand data:', error);
+    console.error("Error retrieving brand data:", error);
   }
 };
 
@@ -59,10 +58,10 @@ export function ComboboxDemo({
   >;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState('');
+  const [value, setValue] = React.useState("");
 
   const { data: logo } = useQuery<LogoApiResponse>({
-    queryKey: ['logos', value],
+    queryKey: ["logos", value],
     queryFn: async () => retrieveBrandDataFromBrandDev(value),
   });
 
@@ -70,12 +69,12 @@ export function ComboboxDemo({
     if (event) {
       setValue(event);
     } else {
-      setValue('');
+      setValue("");
     }
   }, 300);
 
   const removeDomain = (domain: string) => {
-    return domain?.split('.')[0];
+    return domain?.split(".")[0];
   };
 
   return (
@@ -92,7 +91,7 @@ export function ComboboxDemo({
             ? logo?.brand?.domain
             : value && !logo
             ? value
-            : 'select platform'}
+            : "select platform"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -109,7 +108,7 @@ export function ComboboxDemo({
                   key={value}
                   value={JSON.stringify({
                     name: removeDomain(value),
-                    icon: logo?.brand?.logos[0]?.url || '',
+                    icon: logo?.brand?.logos[0]?.url || "",
                   })}
                   onSelect={(value) => {
                     const data = JSON.parse(value);
@@ -124,14 +123,14 @@ export function ComboboxDemo({
                       <AvatarFallback>{logo?.brand.title}</AvatarFallback>
                     </Avatar>
                   </div>
-                  {logo?.brand.domain.replace(/\.com$/, '')}
+                  {logo?.brand.domain.replace(/\.com$/, "")}
                   <Check
                     className={cn(
-                      'mr-2 h-4 w-4',
-                      removeDomain(logo?.brand.domain || '') ===
+                      "mr-2 h-4 w-4",
+                      removeDomain(logo?.brand.domain || "") ===
                         removeDomain(value)
-                        ? 'opacity-100'
-                        : 'opacity-0'
+                        ? "opacity-100"
+                        : "opacity-0"
                     )}
                   />
                 </CommandItem>
@@ -169,14 +168,14 @@ export function ComboboxDemo({
                         {getInitials(value)}
                       </AvatarFallback>
                     </Avatar>
-                    {value.replace(/\.com$/, '')}
+                    {value.replace(/\.com$/, "")}
                   </div>
                   <Check
                     className={cn(
-                      'mr-2 h-4 w-4',
-                      removeDomain(value || '') === removeDomain(value)
-                        ? 'opacity-100'
-                        : 'opacity-0'
+                      "mr-2 h-4 w-4",
+                      removeDomain(value || "") === removeDomain(value)
+                        ? "opacity-100"
+                        : "opacity-0"
                     )}
                   />
                 </CommandItem>
@@ -201,7 +200,7 @@ export function ComboboxDemo({
                     <div className="flex gap-2 items-center">
                       <div className="size-5 md:size-6">
                         <Avatar className="size-4 min-w-4 min-h-4 md:min-h-6 md:min-w-6 md:size-6">
-                          <AvatarImage src={item?.icon || ''} alt={item.name} />
+                          <AvatarImage src={item?.icon || ""} alt={item.name} />
                           <AvatarFallback
                             style={{ backgroundColor: getRandomRgbColor() }}
                             className="text-xs size-5 min-w-5 min-h-5 md:min-h-6 md:min-w-6 md:size-6 flex justify-center items-center"

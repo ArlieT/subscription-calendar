@@ -15,6 +15,7 @@ const AvatarFallbackColored = ({
     const randomColor = getRandomRgbColor();
     setBgColor(randomColor);
   }, []);
+
   return (
     <AvatarFallback
       {...props}
