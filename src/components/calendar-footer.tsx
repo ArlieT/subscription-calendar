@@ -8,13 +8,14 @@ import { eachDayOfInterval, endOfMonth, format, startOfMonth } from "date-fns";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import MotionNumber from "motion-number";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { removeSubscription } from "src/db/subscriptions";
 import { BottomSheet } from "./bottom-sheet";
 import { Avatar } from "./ui/avatar";
 import BottomSheetContent from "./bottom-sheet-content";
 import { MOCK_SUBSCRIPTIONS } from "@/lib/constants";
 import { useUser } from "@clerk/nextjs";
+import AvatarFallbackColored from "./Avatar";
 
 type CalendarProps = {
   subscriptions?: Subscription[];
@@ -161,6 +162,11 @@ const CalendarFooter = ({
         }
       }, 0);
 
+  const [bgColor, setBgColor] = useState("");
+  useEffect(() => {
+    setBgColor(getRandomRgbColor());
+  }, []);
+
   return (
     <>
       <div className="flex flex-row-reverse md:flex-row justify-between items-center w-full my-2 md:my-4">
@@ -270,7 +276,7 @@ const CalendarFooter = ({
           {daysInMonth.map((day, index) => {
             const subscriptionsForDay = getSubscriptionsForDay(day) || [];
 
-            const bgColor = getRandomRgbColor();
+            // const bgColor = getRandomRgbColor();
 
             return (
               <div key={day.toISOString()}>
@@ -309,21 +315,24 @@ const CalendarFooter = ({
                                         src={subcription?.icon || ""}
                                         alt={subcription.name}
                                       />
-                                      <AvatarFallback></AvatarFallback>
-                                      <AvatarFallback
+                                      <AvatarFallbackColored>
+                                        {subcription.name.charAt(0)}
+                                      </AvatarFallbackColored>
+                                      {/* <AvatarFallback
+                                        key={index}
                                         style={{
                                           background: `linear-gradient(135deg, ${bgColor}, rgb(140, 160, 250))`,
                                         }}
                                         className="w-full text-[10px] flex justify-center items-center pt-0.5"
                                       >
                                         {subcription.name.charAt(0)}
-                                      </AvatarFallback>
+                                      </AvatarFallback> */}
                                     </Avatar>
                                   </div>
                                 );
                               })}
                             {subscriptionsForDay.length > 2 && (
-                              <div className="mt-1 flex justify-center items-center size-4 min-w-4 min-h-4 md:min-h-6 md:min-w-6 md:size-6 rounded-full -mr-1 bg-zinc-950 z-10 text text-[10px]">
+                              <div className=" flex justify-center items-center size-4 min-w-4 min-h-4 md:min-h-7 md:min-w-7 md:size-7 rounded-full -mr-1 bg-zinc-950 z-10 text text-[10px]">
                                 <span>+{subscriptionsForDay.length - 2}</span>
                               </div>
                             )}

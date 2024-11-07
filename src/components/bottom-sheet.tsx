@@ -47,31 +47,32 @@ const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
       {open && (
         <>
           <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm" />
-
-          <motion.div
-            ref={ref}
-            className={cn(
-              "fixed bottom-0 mx-auto inset-x-0 rounded-3xl overflow-hidden",
-              modalStyles,
-              bottomSheetStyles,
-              props.className
-            )}
-            variants={variants}
-            initial="closed"
-            animate={open ? "open" : "closed"}
-          >
-            <div className="w-full pt-[46px] relative overflow-y-auto">
-              <div className="block md:hidden absolute h-[6px] w-10 top-2 inset-x-0 rounded-full mx-auto bg-white/60" />
-              <button
-                onClick={() => setOpen(false)}
-                type="button"
-                className=" absolute right-6 top-6 hidden md:block"
-              >
-                <X className="size-5" />
-              </button>
-              {children}
-            </div>
-          </motion.div>
+          <div className="relative">
+            <motion.div
+              ref={ref}
+              className={cn(
+                "fixed bottom-0 mx-auto inset-x-0 rounded-3xl overflow-hidden",
+                modalStyles,
+                bottomSheetStyles,
+                props.className
+              )}
+              variants={variants}
+              initial="closed"
+              animate={open ? "open" : "closed"}
+            >
+              <div className="w-full pt-[46px] relative overflow-y-auto">
+                <div className="block md:hidden fixed h-[6px] w-10 top-2 inset-x-0 rounded-full mx-auto bg-white/60" />
+                <button
+                  onClick={() => setOpen(false)}
+                  type="button"
+                  className=" absolute right-6 top-6 hidden md:block"
+                >
+                  <X className="size-5" />
+                </button>
+                {children}
+              </div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

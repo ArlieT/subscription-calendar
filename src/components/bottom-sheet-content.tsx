@@ -5,6 +5,7 @@ import { Trash } from "lucide-react";
 import { format } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import AvatarFallbackColored from "./Avatar";
 
 type Props = {
   subscription: Subscription;
@@ -52,20 +53,17 @@ const BottomSheetContent = ({
     >
       <dl className="w-full space-y-1 p-2">
         <div className="flex gap-x-2 items-center justify-between w-full">
-          <div className="flex gap-x-2 items-center">
+          <div className="flex gap-x-2 items-center w-auto">
             <dt key={subscription.id} className={cn("")}>
-              <Avatar className="outline h-6 w-6 rounded-full relative bg- overflow-hidden">
+              <Avatar className="">
                 <AvatarImage
                   src={subscription?.icon || ""}
                   alt={subscription.name}
-                  className="h-6 w-6 rounded-full"
+                  className="rounded-full w-6 h-6 md:size-10"
                 />
-                <AvatarFallback
-                  style={{ backgroundColor: getRandomRgbColor() }}
-                  className="h-6 w-6 rounded-full flex justify-center items-center text-xs"
-                >
-                  {subscription.name.charAt(0)}
-                </AvatarFallback>
+                <AvatarFallbackColored className="rounded-full w-6 h-6 md:size-10">
+                  {subscription.name[0]}
+                </AvatarFallbackColored>
               </Avatar>
             </dt>
             <dd className="ml-2 font-bold text-lg">{subscription.name}</dd>
