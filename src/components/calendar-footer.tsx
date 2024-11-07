@@ -13,6 +13,8 @@ import { removeSubscription } from "src/db/subscriptions";
 import { BottomSheet } from "./bottom-sheet";
 import { Avatar } from "./ui/avatar";
 import BottomSheetContent from "./bottom-sheet-content";
+import { MOCK_SUBSCRIPTIONS } from "@/lib/constants";
+import { useUser } from "@clerk/nextjs";
 
 type CalendarProps = {
   subscriptions?: Subscription[];
@@ -25,12 +27,11 @@ const CalendarFooter = ({
   selectedDate,
   setSelectedDate,
 }: CalendarProps) => {
+  const { user } = useUser();
   const queryClient = useQueryClient();
   const [open, setOpen] = React.useState(false);
-  const [selectedSubscription, setSelectedSubscription] = React.useState<
-    Subscription[] | null
-  >([]);
-
+  const [selectedSubscription, setSelectedSubscription] =
+    React.useState<Subscription[]>();
   const getDaysInMonth = (selectedDate: Date) => {
     return eachDayOfInterval({
       start: startOfMonth(selectedDate),
@@ -45,7 +46,18 @@ const CalendarFooter = ({
 
     const currentDay = format(day, "yyyy-MM-dd");
 
-    const filteredSubs = subscriptions?.filter((sub) => {
+    let filteredSubs: Subscription[] = [];
+    if (!user?.id) {
+      filteredSubs = MOCK_SUBSCRIPTIONS?.filter((sub) => {
+        const formattedDueDate = format(new Date(sub.dueDate), "yyyy-MM-dd");
+        const isMatch = formattedDueDate === currentDay;
+
+        return isMatch;
+      });
+      return filteredSubs;
+    }
+
+    filteredSubs = (subscriptions || [])?.filter((sub) => {
       const formattedDueDate = format(new Date(sub.dueDate), "yyyy-MM-dd");
       const isMatch = formattedDueDate === currentDay;
 
@@ -83,16 +95,6 @@ const CalendarFooter = ({
   const mutation = useMutation({
     mutationFn: removeSubscription,
     onSuccess: (id) => {
-      /*************  ✨ Codeium Command ⭐  *************/
-      /**
-       * onSuccess callback for the removeSubscription mutation. Invalidates the
-       * "subscriptions" query and removes the deleted subscription from the
-       * selectedSubscriptions state if there is no error.
-       *
-       * @param {{ id: number } | { error: unknown }} id - response from the
-       *   removeSubscription mutation
-       */
-      /******  bb6dfd76-cbdc-4941-87a0-202007f43231  *******/
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
 
       if (!("error" in id)) {
@@ -133,18 +135,31 @@ const CalendarFooter = ({
     }, // Centered
   };
 
-  const totalMonthlyCost = subscriptions?.reduce((total, sub) => {
-    const subscriptionMonth = new Date(sub.dueDate).getMonth();
-    const subscriptionYear = new Date(sub.dueDate).getFullYear();
-    if (
-      selectedDate.getMonth() === subscriptionMonth &&
-      selectedDate.getFullYear() === subscriptionYear
-    ) {
-      return total + sub.cost;
-    } else {
-      return total;
-    }
-  }, 0);
+  const totalMonthlyCost = user?.id
+    ? subscriptions?.reduce((total, sub) => {
+        const subscriptionMonth = new Date(sub.dueDate).getMonth();
+        const subscriptionYear = new Date(sub.dueDate).getFullYear();
+        if (
+          selectedDate.getMonth() === subscriptionMonth &&
+          selectedDate.getFullYear() === subscriptionYear
+        ) {
+          return total + sub.cost;
+        } else {
+          return total;
+        }
+      }, 0)
+    : MOCK_SUBSCRIPTIONS?.reduce((total, sub) => {
+        const subscriptionMonth = new Date(sub.dueDate).getMonth();
+        const subscriptionYear = new Date(sub.dueDate).getFullYear();
+        if (
+          selectedDate.getMonth() === subscriptionMonth &&
+          selectedDate.getFullYear() === subscriptionYear
+        ) {
+          return total + sub.cost;
+        } else {
+          return total;
+        }
+      }, 0);
 
   return (
     <>
@@ -353,9 +368,10 @@ const CalendarFooter = ({
           const isLast = selectedSubscription?.length === index + 1;
           return (
             <BottomSheetContent
-              sub={sub}
+              subscription={sub}
               key={sub.id}
               isLast={isLast}
+              selectedDate={selectedDate}
               selectedSubscription={selectedSubscription}
               handleDelete={handleDelete}
             />

@@ -11,9 +11,21 @@ export const addSubscription = async (
   icon?: string
 ) => {
   try {
-    const currentMonth = new Date().getMonth(); // 0-11 for Jan-Dec
+    // Check if user_id exists in the User table
+    const userExists = await db.user.findUnique({
+      where: { user_id },
+    });
+
+    if (!userExists) {
+      return {
+        success: false,
+        message: "User not found. Please provide a valid user_id.",
+      };
+    }
+
+    const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    const exactDay = dueDate.getDate(); // Get the day of the month
+    const exactDay = dueDate.getDate();
     const subscriptionsToCreate = [];
 
     if (cycle === "MONTHLY") {
@@ -36,6 +48,7 @@ export const addSubscription = async (
           cost,
           cycle,
           dueDate: nextDueDate,
+          startDate: new Date(),
           icon,
         });
       }
@@ -50,6 +63,7 @@ export const addSubscription = async (
           cost,
           cycle,
           dueDate: nextDueDate,
+          startDate: new Date(),
           icon,
         });
       }
