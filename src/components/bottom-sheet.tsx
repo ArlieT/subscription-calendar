@@ -54,14 +54,14 @@ const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
                 "fixed bottom-0 mx-auto inset-x-0 rounded-3xl overflow-hidden",
                 modalStyles,
                 bottomSheetStyles,
-                props.className
+                props.className,
               )}
               variants={variants}
               initial="closed"
               animate={open ? "open" : "closed"}
             >
               <div className="w-full pt-[46px] relative overflow-y-auto">
-                <div className="block md:hidden fixed h-[6px] w-10 top-2 inset-x-0 rounded-full mx-auto bg-white/60" />
+                <div className="block md:hidden absolute h-[6px] w-10 top-2 inset-x-0 rounded-full mx-auto bg-white/60" />
                 <button
                   onClick={() => setOpen(false)}
                   type="button"

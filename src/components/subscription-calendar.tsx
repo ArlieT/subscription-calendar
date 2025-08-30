@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { Cycle } from "@prisma/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { PlusCircle } from "lucide-react";
+import { Loader, PlusCircle } from "lucide-react";
 import React, { useState } from "react";
 import {
   addSubscription as addsubscriptionDB,
   getSubscriptions,
 } from "src/db/subscriptions";
 import { Subscription } from "src/types";
-import CalendarFooter from "./calendar-footer";
+import CalendarMain from "./calendar-footer";
 import Toast from "./toat";
 import { DatePicker } from "./ui/date-picker";
 import {
@@ -37,6 +37,7 @@ type ToastState = {
 export default function SubscriptionCalendar() {
   // Access the client
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>({
     isOpen: false,
     text: "",
@@ -56,55 +57,61 @@ export default function SubscriptionCalendar() {
 
   const addSubscription = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    setIsLoading(true);
+    try {
+      const formData = new FormData(e.currentTarget);
 
-    if (!dueDate) return;
+      if (!dueDate) return;
 
-    const newSubscription: Subscription = {
-      name: platform.name,
-      cost: parseFloat(formData.get("cost") as string),
-      cycle: billingCycle,
-      dueDate: new Date(dueDate),
-      icon: platform.icon,
-    };
+      const newSubscription: Subscription = {
+        name: platform.name,
+        cost: parseFloat(formData.get("cost") as string),
+        cycle: billingCycle,
+        dueDate: new Date(dueDate),
+        icon: platform.icon,
+      };
 
-    if (!user?.id) {
-      openSignIn();
-      return;
-    }
+      if (!user?.id) {
+        openSignIn();
+        return;
+      }
 
-    const result = await addsubscriptionDB(
-      user?.id,
-      newSubscription.name,
-      newSubscription.cost,
-      newSubscription.cycle,
-      newSubscription.dueDate,
-      newSubscription.icon
-    );
+      const result = await addsubscriptionDB(
+        user?.id,
+        newSubscription.name,
+        newSubscription.cost,
+        newSubscription.cycle,
+        newSubscription.dueDate,
+        newSubscription.icon,
+      );
 
-    if (!result.error) {
-      setToast({
-        isOpen: true,
-        text: "Subscriptions added!",
-        status: "success",
+      if (!result.error) {
+        setToast({
+          isOpen: true,
+          text: "Subscriptions added!",
+          status: "success",
+        });
+      } else {
+        setToast({
+          isOpen: true,
+          text: "Something went wrong! please try again.",
+          status: "error",
+        });
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: ["subscriptions"],
       });
-    } else {
-      setToast({
-        isOpen: true,
-        text: "Something went wrong! please try again.",
-        status: "error",
-      });
+    } catch {
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
-
-    queryClient.invalidateQueries({
-      queryKey: ["subscriptions"],
-    });
   };
 
   // Queries
   const { data } = useQuery({
     queryKey: ["subscriptions", user?.id],
-
     queryFn: () => {
       return getSubscriptions(user?.id);
     },
@@ -121,7 +128,7 @@ export default function SubscriptionCalendar() {
       </div>
       <div className="grid gap-6 w-full">
         <div>
-          <form onSubmit={addSubscription} className="space-y-4">
+          <form onSubmit={addSubscription} className="space-y-4 text-zinc-300">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Platform</Label>
@@ -135,6 +142,7 @@ export default function SubscriptionCalendar() {
                   id="cost"
                   name="cost"
                   type="number"
+                  inputMode="numeric"
                   step="0.01"
                   required
                 />
@@ -173,15 +181,21 @@ export default function SubscriptionCalendar() {
             <Button
               type="submit"
               variant="default"
-              className="bg-primary-foreground text-background w-full"
+              className="bg-primary-foreground/90 text-background w-full"
             >
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Subscription
+              {isLoading ? (
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add Subscription
+                </>
+              )}
             </Button>
           </form>
         </div>
       </div>
 
-      <CalendarFooter
+      <CalendarMain
         subscriptions={data}
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}

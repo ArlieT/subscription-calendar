@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 import prisma from "../../../db/prisma";
 
 interface EmailAddress {
@@ -19,6 +19,8 @@ export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as ClerkWebhookEvent;
 
+    console.log(payload);
+
     if (!payload) {
       return NextResponse.json({ message: "No payload" });
     }
@@ -31,27 +33,27 @@ export async function POST(request: Request) {
         data: {
           user_id: payload.data.id,
           email: email,
-          name: payload.data.username || email
-        }
+          name: payload.data.username || email,
+        },
       });
 
-      console.log('Created user:', user);
+      console.log("Created user:", user);
 
       return NextResponse.json({
         message: "User created successfully",
-        user: user
+        user: user,
       });
     }
 
     return NextResponse.json({ message: "Invalid payload" }, { status: 400 });
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error("Webhook error:", error);
     return NextResponse.json(
       {
         message: "Internal server error",
-        error: String(error)
+        error: String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -23,7 +23,7 @@ type CalendarProps = {
   setSelectedDate: React.Dispatch<React.SetStateAction<Date>>;
 };
 
-const CalendarFooter = ({
+const CalendarMain = ({
   subscriptions,
   selectedDate,
   setSelectedDate,
@@ -108,7 +108,7 @@ const CalendarFooter = ({
 
   const handleDelete = (id: number) => {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this subscription?"
+      "Are you sure you want to delete this subscription?",
     );
     if (confirmed) {
       mutation.mutate(id);
@@ -206,8 +206,11 @@ const CalendarFooter = ({
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-xl text-center text-zinc-300 md:text-3xl tracking-wider font-bold">
-              <span className="inline">{format(selectedDate, "MMMM")}</span>
-
+              <div className="flex flex-col">
+                <span className="inline whitespace-nowrap">
+                  {format(selectedDate, "MMMM")}
+                </span>
+              </div>
               <span className="text-gray-400 mx-4 font">
                 {format(selectedDate, "yyyy")}
               </span>
@@ -216,7 +219,7 @@ const CalendarFooter = ({
         </div>
         <div className="flex items-center gap-x-8">
           <div className="flex flex-col">
-            <span className="text-zinc-500 md:whitespace-nowrap">
+            <span className="text-xs md:text-base text-zinc-500 whitespace-nowrap md:whitespace-nowrap">
               Monthly Expenses
             </span>
             <div className="w-full text-right text-secondary">
@@ -298,7 +301,7 @@ const CalendarFooter = ({
                         {subscriptionsForDay?.length > 0 ? (
                           <div
                             className={cn(
-                              "w-full flex flex-1 justify-center md:mb-3 py-1 cursor-pointer"
+                              "w-full flex flex-1 justify-center md:mb-3 py-1 cursor-pointer",
                             )}
                           >
                             {/* only show the first three subscriptions */}
@@ -391,9 +394,9 @@ const CalendarFooter = ({
   );
 };
 
-CalendarFooter.displayName = "CalendarFooter";
+CalendarMain.displayName = "CalendarFooter";
 
-export default CalendarFooter;
+export default CalendarMain;
 
 const CalendarButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ children, className, variant, size, asChild = false, ...props }, ref) => {
@@ -404,13 +407,13 @@ const CalendarButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
         variant={variant}
         className={cn(
           "relative !py-0 aspect-square rounded-2xl border-none shadow-sm w-full h-full md:max-h-24 md:max-w-28 max-h-[80px] max-w-[90px]",
-          className
+          className,
         )}
       >
         {children}
       </Button>
     );
-  }
+  },
 );
 
 CalendarButton.displayName = "CalendarButton";

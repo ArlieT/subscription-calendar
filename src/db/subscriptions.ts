@@ -1,6 +1,7 @@
 "use server";
 import type { Cycle } from "@prisma/client";
 import db from "./prisma";
+import { calcGeneratorDuration } from "framer-motion";
 
 export const addSubscription = async (
   user_id: string,
@@ -8,7 +9,7 @@ export const addSubscription = async (
   cost: number,
   cycle: Cycle,
   dueDate: Date,
-  icon?: string
+  icon?: string,
 ) => {
   try {
     // Check if user_id exists in the User table
@@ -35,7 +36,7 @@ export const addSubscription = async (
         const nextDueDate = new Date(
           currentYear + yearOffset,
           monthIndex,
-          exactDay
+          exactDay,
         );
 
         if (nextDueDate.getDate() !== exactDay) {
@@ -91,6 +92,7 @@ export async function sanitizeData(data: any) {
   return JSON.parse(JSON.stringify(data));
 }
 export const getSubscriptions = async (userId?: string) => {
+  console.log("userId", userId);
   try {
     if (!userId) {
       return [];
@@ -99,6 +101,8 @@ export const getSubscriptions = async (userId?: string) => {
     const subscriptions = await db.subscription.findMany({
       where: { user_id: userId },
     });
+
+    console.log({ subscriptions });
 
     if (!subscriptions) return [];
 
