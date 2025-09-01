@@ -33,7 +33,7 @@
         "framer-motion": "^11.11.7",
         "lucide-react": "^0.446.0",
         "motion-number": "^0.1.7",
-        "next": "14.2.13",
+        "next": "14.2.25",
         "postgres": "^3.4.4",
         "prisma": "^5.20.0",
         "react": "^18",
