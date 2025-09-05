@@ -1,21 +1,27 @@
 import { Button, ButtonProps } from "@/components/ui/button";
-import { cn, getRandomRgbColor } from "@/lib/utils";
-import { Subscription } from "@prisma/client";
-import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import {
+  calculateMonthlyCost,
+  cn,
+  getAllDaysInMonth,
+  getFirstDayOfMonth,
+  getLastDayOfMonth,
+  getSubscriptionOfTheDay,
+} from "@/lib/utils";
+import { useUser } from "@clerk/nextjs";
+import { AvatarImage } from "@radix-ui/react-avatar";
 import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { eachDayOfInterval, endOfMonth, format, startOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import MotionNumber from "motion-number";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { removeSubscription } from "src/db/subscriptions";
-import { BottomSheet } from "./bottom-sheet";
-import { Avatar } from "./ui/avatar";
-import BottomSheetContent from "./bottom-sheet-content";
-import { MOCK_SUBSCRIPTIONS } from "@/lib/constants";
-import { useUser } from "@clerk/nextjs";
+import { Subscription } from "src/types";
 import AvatarFallbackColored from "./Avatar";
+import { BottomSheet } from "./bottom-sheet";
+import BottomSheetContent from "./bottom-sheet-content";
+import { Avatar } from "./ui/avatar";
 
 type CalendarProps = {
   subscriptions?: Subscription[];
@@ -31,58 +37,9 @@ const CalendarMain = ({
   const { user } = useUser();
   const queryClient = useQueryClient();
   const [open, setOpen] = React.useState(false);
-  const [selectedSubscription, setSelectedSubscription] =
+  const [isFromLeft, setIsFromLeft] = React.useState<boolean>(true);
+  const [selectedDateToView, setSelectedDateToView] =
     React.useState<Subscription[]>();
-  const getDaysInMonth = (selectedDate: Date) => {
-    return eachDayOfInterval({
-      start: startOfMonth(selectedDate),
-      end: endOfMonth(selectedDate),
-    });
-  };
-
-  const daysInMonth = getDaysInMonth(selectedDate);
-
-  const getSubscriptionsForDay = (day: Date) => {
-    // if (!subscriptions || subscriptions.length < 1) return;
-
-    const currentDay = format(day, "yyyy-MM-dd");
-
-    let filteredSubs: Subscription[] = [];
-    if (!user?.id) {
-      filteredSubs = MOCK_SUBSCRIPTIONS?.filter((sub) => {
-        const formattedDueDate = format(new Date(sub.dueDate), "yyyy-MM-dd");
-        const isMatch = formattedDueDate === currentDay;
-
-        return isMatch;
-      });
-      return filteredSubs;
-    }
-
-    filteredSubs = (subscriptions || [])?.filter((sub) => {
-      const formattedDueDate = format(new Date(sub.dueDate), "yyyy-MM-dd");
-      const isMatch = formattedDueDate === currentDay;
-
-      return isMatch;
-    });
-
-    return filteredSubs;
-  };
-
-  function getFirstDayOfMonth(date: Date) {
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-
-    return firstDay.getDay(); // 0 for Sunday, 6 for Saturday
-  }
-
-  function getLastDayOfMonth(date: Date) {
-    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    return lastDay.getDay(); // 0 for Sunday, 6 for Saturday
-  }
-
-  const handleSelectSubscriptionDate = (selected: Subscription[]) => {
-    setSelectedSubscription(selected);
-    setOpen(true);
-  };
 
   const handleNextMonth = () => {
     setIsFromLeft(true);
@@ -99,14 +56,15 @@ const CalendarMain = ({
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
 
       if (!("error" in id)) {
-        setSelectedSubscription((e) => {
+        setSelectedDateToView((e) => {
           return e ? e.filter((sub) => sub.id !== id.id) : e;
         });
       }
     },
   });
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: number | undefined) => {
+    if (!id) return;
     const confirmed = window.confirm(
       "Are you sure you want to delete this subscription?",
     );
@@ -115,7 +73,11 @@ const CalendarMain = ({
     }
   };
 
-  const [isFromLeft, setIsFromLeft] = React.useState<boolean>(true);
+  const [isEditMode, setIsEditMode] = React.useState(false);
+  const handleEdit = (id: number | undefined) => {
+    if (!id) return;
+    setIsEditMode(true);
+  };
 
   const handlePrevMonth = () => {
     setIsFromLeft(false);
@@ -136,36 +98,7 @@ const CalendarMain = ({
     }, // Centered
   };
 
-  const totalMonthlyCost = user?.id
-    ? subscriptions?.reduce((total, sub) => {
-        const subscriptionMonth = new Date(sub.dueDate).getMonth();
-        const subscriptionYear = new Date(sub.dueDate).getFullYear();
-        if (
-          selectedDate.getMonth() === subscriptionMonth &&
-          selectedDate.getFullYear() === subscriptionYear
-        ) {
-          return total + sub.cost;
-        } else {
-          return total;
-        }
-      }, 0)
-    : MOCK_SUBSCRIPTIONS?.reduce((total, sub) => {
-        const subscriptionMonth = new Date(sub.dueDate).getMonth();
-        const subscriptionYear = new Date(sub.dueDate).getFullYear();
-        if (
-          selectedDate.getMonth() === subscriptionMonth &&
-          selectedDate.getFullYear() === subscriptionYear
-        ) {
-          return total + sub.cost;
-        } else {
-          return total;
-        }
-      }, 0);
-
-  const [bgColor, setBgColor] = useState("");
-  useEffect(() => {
-    setBgColor(getRandomRgbColor());
-  }, []);
+  const totalMonthlyCost = calculateMonthlyCost(subscriptions);
 
   return (
     <>
@@ -230,7 +163,6 @@ const CalendarMain = ({
                   currency: "PHP",
                   compactDisplay: "short",
                   notation: "standard",
-                  roundingMode: "floor",
                 }}
                 className="text-foreground text-lg w-full"
               />
@@ -263,7 +195,6 @@ const CalendarMain = ({
         }}
       >
         <div className="grid grid-cols-7 h-fit grid-rows-6 gap-1 md:gap-2">
-          {/* Calculate the first day of the month */}
           {/* Render empty days before the first day of the month */}
           {Array.from({
             length: getFirstDayOfMonth(selectedDate || new Date()),
@@ -276,20 +207,19 @@ const CalendarMain = ({
             ></CalendarButton>
           ))}
 
-          {daysInMonth.map((day, index) => {
-            const subscriptionsForDay = getSubscriptionsForDay(day) || [];
-
-            // const bgColor = getRandomRgbColor();
+          {getAllDaysInMonth(selectedDate || new Date()).map((day, index) => {
+            const subscriptionsForDay =
+              getSubscriptionOfTheDay(day, subscriptions, user?.id) || [];
 
             return (
               <div key={day.toISOString()}>
                 <Popover>
                   <PopoverTrigger asChild>
                     <CalendarButton
-                      className={`relative bg-[#1e1e1e] p-0`}
+                      className={`relative hover:bg-[#1e1e1e]/80 bg-[#1e1e1e] p-0`}
                       onClick={() => {
                         if (!subscriptionsForDay.length) return;
-                        setSelectedSubscription(subscriptionsForDay);
+                        setSelectedDateToView(subscriptionsForDay);
                         setOpen(true);
                       }}
                     >
@@ -372,23 +302,19 @@ const CalendarMain = ({
         open={open}
         setOpen={setOpen}
         className="flex flex-col bg-zinc-900 md:p-4"
+        title="Subscription Details"
       >
-        {selectedSubscription && selectedSubscription?.length <= 0 && (
+        {selectedDateToView && selectedDateToView?.length <= 0 && (
           <div className="h-full w-full text-center">no items.</div>
         )}
-        {selectedSubscription?.map((sub, index) => {
-          const isLast = selectedSubscription?.length === index + 1;
-          return (
-            <BottomSheetContent
-              subscription={sub}
-              key={sub.id}
-              isLast={isLast}
-              selectedDate={selectedDate}
-              selectedSubscription={selectedSubscription}
-              handleDelete={handleDelete}
-            />
-          );
-        })}
+        <BottomSheetContent
+          isLast={false}
+          isEditMode={isEditMode}
+          selectedDate={selectedDate}
+          selectedSubscription={selectedDateToView}
+          handleDelete={handleDelete}
+          handleEdit={handleEdit}
+        />
       </BottomSheet>
     </>
   );
@@ -406,7 +332,7 @@ const CalendarButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         variant={variant}
         className={cn(
-          "relative !py-0 aspect-square rounded-2xl border-none shadow-sm w-full h-full md:max-h-24 md:max-w-28 max-h-[80px] max-w-[90px]",
+          "relative !py-0 aspect-square hover:bg rounded-2xl border-none shadow-sm w-full h-full md:max-h-24 md:max-w-28 max-h-[80px] max-w-[90px]",
           className,
         )}
       >

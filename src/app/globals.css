@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-geist-sans), sans-serif;
     overscroll-behavior: none;
 }
 
@@ -81,6 +81,7 @@ ul {
 
 @layer base {
     :root {
+        --default-font-family: var(--font-geist-sans), sans-serif;
         --background: 0 100% 100%;
         --foreground: 224 71.4% 4.1%;
         --card: 0 0% 100%;

@@ -1,114 +1,127 @@
 import { cn, getRandomRgbColor } from "@/lib/utils";
-import { Subscription } from "@prisma/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
-import { Trash } from "lucide-react";
+import { Badge, Calendar, Edit3, Trash, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import AvatarFallbackColored from "./Avatar";
+import { Subscription } from "src/types";
+import MotionNumber from "motion-number";
+import { Popover } from "@radix-ui/themes";
+import { AnimatePresence, motion } from "framer-motion";
+import DropdownOptions from "./dropdown-menu";
 
 type Props = {
-  subscription: Subscription;
-  selectedSubscription: Subscription[];
+  selectedSubscription: Subscription[] | undefined;
+  isEditMode: boolean;
   isLast: boolean;
   selectedDate: Date;
-  handleDelete: (id: number) => void;
+  handleDelete: (id: number | undefined) => void;
+  handleEdit: (id: number | undefined) => void;
 };
 
 const BottomSheetContent = ({
-  subscription: subscription,
   selectedSubscription,
+  isEditMode,
   selectedDate,
   isLast,
   handleDelete,
 }: Props) => {
   const [totalCost, setTotalCost] = useState(0);
 
-  useEffect(() => {
-    function calculateMonthsPassed(startDate: Date, currentDate: Date) {
-      const start = new Date(startDate);
-      const current = new Date(currentDate);
+  // useEffect(() => {
+  //   function calculateMonthsPassed(startDate: Date, currentDate: Date) {
+  //     const start = new Date(startDate);
+  //     const current = new Date(currentDate);
 
-      const yearsDifference = current.getFullYear() - start.getFullYear();
-      const monthsDifference = current.getMonth() - start.getMonth();
+  //     const yearsDifference = current.getFullYear() - start.getFullYear();
+  //     const monthsDifference = current.getMonth() - start.getMonth();
 
-      const includedFirstMonth = 1;
-      return yearsDifference * 12 + monthsDifference + includedFirstMonth;
-    }
+  //     const includedFirstMonth = 1;
+  //     return yearsDifference * 12 + monthsDifference + includedFirstMonth;
+  //   }
 
-    console.log(calculateMonthsPassed(subscription.createdAt, selectedDate));
+  //   setTotalCost(
+  //     subscription.cost *
+  //       calculateMonthsPassed(subscription.createdAt, selectedDate),
+  //   );
+  // }, [selectedSubscription]);
 
-    setTotalCost(
-      subscription.cost *
-        calculateMonthsPassed(subscription.createdAt, selectedDate)
-    );
-  }, [selectedSubscription]);
   return (
     <div
-      key={subscription.id}
-      className={cn("w-full flex gap-2", {
-        "border-b pb-2 p-1":
-          selectedSubscription && !isLast && selectedSubscription?.length > 1,
+      className={cn("w-full flex flex-col gap-2", {
+        // "border-b  pb-2 p-1":
+        //   selectedSubscription && !isLast && selectedSubscription?.length > 1,
       })}
     >
-      <dl className="w-full space-y-1 p-2">
-        <div className="flex gap-x-2 items-center justify-between w-full">
-          <div className="flex gap-x-2 items-center w-auto">
-            <dt key={subscription.id} className={cn("")}>
-              <Avatar className="">
-                <AvatarImage
-                  src={subscription?.icon || ""}
-                  alt={subscription.name}
-                  className="rounded-full w-6 h-6 md:size-10"
-                />
-                <AvatarFallbackColored className="rounded-full w-6 h-6 md:size-10">
-                  {subscription.name[0]}
-                </AvatarFallbackColored>
-              </Avatar>
-            </dt>
-            <dd className="ml-2 font-bold text-lg">{subscription.name}</dd>
-          </div>
-          <Button
-            variant="destructive"
-            className="w-auto px-4 md:size-12 md:max-h-10"
-            onClick={() => handleDelete(subscription.id)}
+      {selectedSubscription?.map((subscription) => {
+        return (
+          <div
+            key={subscription.id}
+            className="flex flex-col w-full c/space-y-1 p-2"
           >
-            <Trash className="size-4 md:size-4" />
-          </Button>
-        </div>
-        <div className="flex w-full justify-between">
-          <dd>cost</dd>
-          <dd className="font-bold text-lg tabular-nums">
-            ${subscription.cost.toFixed(2)}
-          </dd>
-        </div>
-        <div className="flex justify-between w-full">
-          {subscription.cycle === "MONTHLY" ? (
-            <>
-              <dd>Every &nbsp;{format(subscription.dueDate, "io")}</dd>
-              <dd className="text-foreground/70">Nexth payment</dd>
-            </>
-          ) : (
-            <>
-              <dd>
-                {format(
-                  new Date(
-                    new Date(subscription.dueDate).setFullYear(
-                      new Date(subscription.dueDate).getFullYear() + 1
-                    )
-                  ),
-                  "dd MMM yyyy"
-                )}
-              </dd>
-              <dd className="text-foreground/70">Nexth payment</dd>
-            </>
-          )}
-        </div>
-        <div className="flex justify-between w-full">
-          <dd>Total since {format(subscription.createdAt, "dd MMM yyyy")} </dd>
-          <dd className="text-foreground/70">{totalCost}</dd>
-        </div>
-      </dl>
+            <div className="flex w-fit self-end">
+              <DropdownOptions
+                onEdit={() => {}}
+                onDelete={() => handleDelete(subscription.id)}
+              />
+            </div>
+
+            <div className="flex  items-center w-full justify-between">
+              <div className="flex flex-col gap-2">
+                <Avatar className="flex items-center gap-2">
+                  <AvatarImage
+                    src={subscription?.icon || ""}
+                    alt={subscription.name}
+                    className="rounded-full size-8 md:size-10"
+                  />
+                  <span className="">{subscription.name}</span>
+                  <AvatarFallbackColored className="rounded-full w-6 h-6 md:size-10">
+                    {subscription.name[0]}
+                  </AvatarFallbackColored>
+                </Avatar>
+                <span className="text-sm text-foreground/70">
+                  Every &nbsp;{format(subscription.dueDate, "dd")}th
+                </span>
+                <span className="text-sm text-foreground/70">
+                  Since {format(subscription.createdAt, "MMMM dd, yyyy")}
+                </span>
+                <span className="text-sm text-foreground/70">
+                  {subscription.description}
+                </span>
+              </div>
+              <div className="flex flex-col justify-end items-end gap-2">
+                <MotionNumber
+                  value={subscription.cost.toFixed(2)}
+                  format={{
+                    style: "currency",
+                    currency: "PHP",
+                    compactDisplay: "short",
+                    notation: "standard",
+                  }}
+                  className="text-foreground text-lg md:text-xl "
+                />
+                <span className="text-foreground text-center bg-gray-500/20 py-1 p-3 rounded-lg capitalize text-sm">
+                  {subscription.cycle.toLowerCase()}
+                </span>
+                {/*//todo calculate total expenses since first payment*/}
+                <MotionNumber
+                  value={subscription.cost.toFixed(2)}
+                  format={{
+                    style: "currency",
+                    currency: "PHP",
+                    compactDisplay: "short",
+                    notation: "standard",
+                  }}
+                  className="text-sm text-foreground/70 w-fit"
+                />
+              </div>
+            </div>
+
+            <div className="w-full h-[1px] my-8 bg-gray-500/10 rounded-full" />
+          </div>
+        );
+      })}
     </div>
   );
 };

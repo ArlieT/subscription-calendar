@@ -19,8 +19,6 @@ export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as ClerkWebhookEvent;
 
-    console.log(payload);
-
     if (!payload) {
       return NextResponse.json({ message: "No payload" });
     }

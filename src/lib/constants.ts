@@ -1,4 +1,4 @@
-import { Subscription } from "@prisma/client";
+import { Status, Subscription } from "@prisma/client";
 
 export const BRAND_LOGOS = [
   {
@@ -27,6 +27,9 @@ export const MOCK_SUBSCRIPTIONS: Subscription[] = [
     startDate: new Date(),
     dueDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     icon: "https://seeklogo.com/images/N/netflix-n-logo-0F1ED3EBEB-seeklogo.com.png",
+    status: Status.ACTIVE,
+    tags: ["Entertainment", "Streaming"],
+    description: "Watch your favorite movies and TV shows online.",
   },
   {
     id: 2,
@@ -39,6 +42,9 @@ export const MOCK_SUBSCRIPTIONS: Subscription[] = [
     startDate: new Date(),
     dueDate: new Date(new Date().getFullYear(), new Date().getMonth(), 15),
     icon: "https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_Green.png",
+    status: Status.ACTIVE,
+    tags: ["Music", "Streaming"],
+    description: "Listen to your favorite songs and podcasts online.",
   },
 
   {
@@ -52,8 +58,11 @@ export const MOCK_SUBSCRIPTIONS: Subscription[] = [
     startDate: new Date(),
     dueDate: new Date(new Date().getFullYear(), new Date().getMonth(), 15),
     icon: "https://goodly.co.in/wp-content/uploads/2023/10/youtube-logo-png-46016-1.png",
+    status: Status.ACTIVE,
+    tags: ["Video", "Streaming"],
+    description: "Watch your favorite videos and channels online.",
   },
-   {
+  {
     id: 2,
     user_id: "2",
     name: "Twitter",
@@ -64,6 +73,9 @@ export const MOCK_SUBSCRIPTIONS: Subscription[] = [
     startDate: new Date(),
     dueDate: new Date(new Date().getFullYear(), new Date().getMonth(), 3),
     icon: "",
+    status: Status.ACTIVE,
+    tags: ["Social Media", "Communication"],
+    description: "Connect with friends and follow your favorite accounts.",
   },
   {
     id: 2,
@@ -76,6 +88,9 @@ export const MOCK_SUBSCRIPTIONS: Subscription[] = [
     startDate: new Date(),
     dueDate: new Date(new Date().getFullYear(), new Date().getMonth(), 15),
     icon: "https://goodly.co.in/wp-content/uploads/2023/10/youtube-logo-png-46016-1.png",
+    status: Status.ACTIVE,
+    tags: ["Web Hosting", "Deployment"],
+    description: "Deploy and host your web applications with ease.",
   },
   {
     id: 3,
@@ -88,6 +103,9 @@ export const MOCK_SUBSCRIPTIONS: Subscription[] = [
     startDate: new Date(),
     dueDate: new Date(new Date().getFullYear(), 0, 1),
     icon: "https://seeklogo.com/images/A/adobe-creative-cloud-logo-09835516CE-seeklogo.com.png",
+    status: Status.ACTIVE,
+    tags: ["Design", "Editing"],
+    description: "Access a suite of creative tools for design and editing.",
   },
   {
     id: 4,
@@ -100,6 +118,9 @@ export const MOCK_SUBSCRIPTIONS: Subscription[] = [
     startDate: new Date(),
     dueDate: new Date(new Date().getFullYear(), 3, 5),
     icon: "https://seeklogo.com/images/A/amazon-prime-icon-logo-284C9B4A55-seeklogo.com.png",
+    status: Status.ACTIVE,
+    tags: ["Streaming", "Entertainment"],
+    description: "Stream movies, TV shows, and more with Amazon Prime.",
   },
   {
     id: 5,
@@ -112,5 +133,8 @@ export const MOCK_SUBSCRIPTIONS: Subscription[] = [
     startDate: new Date(),
     dueDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     icon: "https://seeklogo.com/images/D/disney-logo-F372D69848-seeklogo.com.png",
+    status: Status.ACTIVE,
+    tags: ["Streaming", "Entertainment"],
+    description: "Stream movies, TV shows, and more with Disney+.",
   },
 ];

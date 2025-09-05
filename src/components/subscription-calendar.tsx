@@ -6,9 +6,9 @@ import { ComboboxDemo } from "@/components/ui/combo-box";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useClerk, useUser } from "@clerk/nextjs";
-import { Cycle } from "@prisma/client";
+import { Cycle, Status } from "@prisma/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader, PlusCircle } from "lucide-react";
+import { CloudLightning, Loader, PlusCircle } from "lucide-react";
 import React, { useState } from "react";
 import {
   addSubscription as addsubscriptionDB,
@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { TextArea } from "@radix-ui/themes";
 
 type ToastState = {
   isOpen: boolean;
@@ -35,7 +36,6 @@ type ToastState = {
 };
 
 export default function SubscriptionCalendar() {
-  // Access the client
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>({
@@ -57,33 +57,32 @@ export default function SubscriptionCalendar() {
 
   const addSubscription = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
     setIsLoading(true);
     try {
-      const formData = new FormData(e.currentTarget);
-
       if (!dueDate) return;
-
-      const newSubscription: Subscription = {
-        name: platform.name,
-        cost: parseFloat(formData.get("cost") as string),
-        cycle: billingCycle,
-        dueDate: new Date(dueDate),
-        icon: platform.icon,
-      };
 
       if (!user?.id) {
         openSignIn();
         return;
       }
 
-      const result = await addsubscriptionDB(
-        user?.id,
-        newSubscription.name,
-        newSubscription.cost,
-        newSubscription.cycle,
-        newSubscription.dueDate,
-        newSubscription.icon,
-      );
+      const newSubscription: Omit<
+        Subscription,
+        "id" | "createdAt" | "updatedAt"
+      > = {
+        user_id: user?.id,
+        name: platform.name,
+        description: formData.get("description") as string,
+        cost: parseFloat(formData.get("cost") as string),
+        cycle: billingCycle,
+        dueDate: new Date(dueDate),
+        tags: [],
+        icon: platform.icon,
+        status: Status.ACTIVE,
+      };
+
+      const result = await addsubscriptionDB(newSubscription);
 
       if (!result.error) {
         setToast({
@@ -162,6 +161,8 @@ export default function SubscriptionCalendar() {
                     <SelectGroup>
                       <SelectItem value="MONTHLY">Monthly</SelectItem>
                       <SelectItem value="YEARLY">Yearly</SelectItem>
+                      <SelectItem value="WEEKLY">Weekly</SelectItem>
+                      <SelectItem value="DAILY">Daily</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -177,7 +178,15 @@ export default function SubscriptionCalendar() {
                 />
               </div>
             </div>
-
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Input
+                className="w-full max-w-full bg-transparent"
+                name="description"
+                id="description"
+                type="text"
+              />
+            </div>
             <Button
               type="submit"
               variant="default"

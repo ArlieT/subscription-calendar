@@ -1,16 +1,19 @@
 "use server";
 import type { Cycle } from "@prisma/client";
 import db from "./prisma";
+import { Subscription } from "src/types";
 
 export const addSubscription = async (
-  user_id: string,
-  name: string,
-  cost: number,
-  cycle: Cycle,
-  dueDate: Date,
-  icon?: string,
+  subscription: Omit<Subscription, "id" | "createdAt" | "updatedAt">,
 ) => {
   try {
+    const { name, description, cost, cycle, tags, icon, dueDate, user_id } =
+      subscription;
+
+    if (!subscription.user_id) {
+      throw new Error("User ID is required");
+    }
+
     // Check if user_id exists in the User table
     const userExists = await db.user.findUnique({
       where: { user_id },
@@ -26,51 +29,22 @@ export const addSubscription = async (
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const exactDay = dueDate.getDate();
-    const subscriptionsToCreate = [];
 
-    if (cycle === "MONTHLY") {
-      for (let i = 0; i < 12; i++) {
-        const monthIndex = (currentMonth + i) % 12;
-        const yearOffset = Math.floor((currentMonth + i) / 12);
-        const nextDueDate = new Date(
-          currentYear + yearOffset,
-          monthIndex,
-          exactDay,
-        );
+    //TODO dont create multiple
+    // create just one then just check the day to render in the calendar
 
-        if (nextDueDate.getDate() !== exactDay) {
-          nextDueDate.setMonth(monthIndex + 1, 0);
-        }
-
-        subscriptionsToCreate.push({
-          user_id,
-          name,
-          cost,
-          cycle,
-          dueDate: nextDueDate,
-          startDate: new Date(),
-          icon,
-        });
-      }
-    } else {
-      for (let i = 0; i <= 1; i++) {
-        const nextDueDate = new Date(dueDate);
-        nextDueDate.setFullYear(nextDueDate.getFullYear() + i);
-
-        subscriptionsToCreate.push({
-          user_id,
-          name,
-          cost,
-          cycle,
-          dueDate: nextDueDate,
-          startDate: new Date(),
-          icon,
-        });
-      }
-    }
-
-    const result = await db.subscription.createMany({
-      data: subscriptionsToCreate,
+    const result = await db.subscription.create({
+      data: {
+        name,
+        cost,
+        cycle,
+        startDate: new Date(currentYear, currentMonth, exactDay), //todo reomove
+        dueDate,
+        icon,
+        tags,
+        description,
+        user_id,
+      },
     });
 
     return {
@@ -91,7 +65,6 @@ export async function sanitizeData(data: any) {
   return JSON.parse(JSON.stringify(data));
 }
 export const getSubscriptions = async (userId?: string) => {
-  console.log("userId", userId);
   try {
     if (!userId) {
       return [];
@@ -100,8 +73,6 @@ export const getSubscriptions = async (userId?: string) => {
     const subscriptions = await db.subscription.findMany({
       where: { user_id: userId },
     });
-
-    console.log({ subscriptions });
 
     if (!subscriptions) return [];
 
@@ -119,7 +90,6 @@ export async function removeSubscription(id: number) {
     const subscription = await db.subscription.delete({
       where: { id },
     });
-    console.log({ subscription });
     return subscription;
   } catch (error) {
     console.error("Error removing subscription:", error);

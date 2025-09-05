@@ -1,11 +1,16 @@
-import type { Cycle } from '@prisma/client';
+import type { Cycle } from "@prisma/client";
 export type Subscription = {
   id?: number;
   name: string;
+  description: string | null;
   cost: number;
   cycle: Cycle;
+  tags: string[];
+  status: string;
+  icon?: string | null;
   dueDate: Date;
-  icon?: string;
+  user_id: string;
+  createdAt: Date;
 };
 
 type BrandColor = {

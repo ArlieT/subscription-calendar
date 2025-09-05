@@ -1,9 +1,10 @@
 "use client";
 import useClickOutside from "@/lib/hooks/useClickoutSide";
 import { cn } from "@/lib/utils";
+import { useEmailLink } from "@clerk/nextjs";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 
 type Props = {
   children: React.ReactNode;
@@ -11,7 +12,7 @@ type Props = {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
+const BottomSheet = ({ children, open, setOpen, title, ...props }: Props) => {
   const ref = useClickOutside<HTMLDivElement>(() => {
     if (open) {
       setOpen(false);
@@ -38,8 +39,16 @@ const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
     },
   };
 
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  }, [open]);
+
   const modalStyles =
-    "md:m-auto md:inset-0 md:w-3/5 md:h-fit max-h-[50%] md:rounded-3xl";
+    "md:m-auto md:inset-0 md:w-3/5 md:h-fit max-h-[80%] md:rounded-3xl";
   const bottomSheetStyles = "rounded-b-none inset-x-0 min-h-[30vh] w-[99.5%]";
 
   return (
@@ -63,13 +72,15 @@ const BottomSheet = ({ children, open, setOpen, ...props }: Props) => {
               <div className="w-full pt-[46px] relative overflow-y-auto">
                 <div className="block md:hidden absolute h-[6px] w-10 top-2 inset-x-0 rounded-full mx-auto bg-white/60" />
                 <button
-                  onClick={() => setOpen(false)}
+                  onClick={() => {
+                    setOpen(false);
+                  }}
                   type="button"
-                  className=" absolute right-6 top-6 hidden md:block"
+                  className=" absolute right-6 md:right-0 md:top-0 top-6 hidden md:block"
                 >
                   <X className="size-5" />
                 </button>
-                {children}
+                <div className="overflow-x-hidden">{children}</div>
               </div>
             </motion.div>
           </div>
