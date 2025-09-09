@@ -2,11 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Sora } from "next/font/google";
 import localFont from "next/font/local";
 
-import Navbar from "@/components/navbar";
-import ReactQueryProvider from "@/components/provider/ReactQueryProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import "./globals.css";
+import ReactQueryProvider from "src/components/provider/ReactQueryProvider";
+import Navbar from "src/components/navbar";
+import { Toaster } from "src/components/ui/sonner";
 
 const sora = Sora({ weight: "400", subsets: ["latin"] });
 
@@ -61,6 +62,7 @@ export default function RootLayout({
         <body
           className={`dark ${sora.className} ${geistSans.variable} ${geistMono.variable}`}
         >
+          <Toaster />
           <ReactQueryProvider>
             <div className="h-dvh w-full bg-background">
               <Navbar />

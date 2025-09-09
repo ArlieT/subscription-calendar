@@ -1,6 +1,6 @@
-import { cn, getRandomRgbColor } from "@/lib/utils";
 import { AvatarFallback } from "@radix-ui/react-avatar";
 import { useState, useEffect } from "react";
+import { cn, getRandomRgbColor } from "src/lib/utils";
 
 const AvatarFallbackColored = ({
   children,
@@ -24,7 +24,7 @@ const AvatarFallbackColored = ({
       }}
       className={cn(
         "w-full text-[10px] flex justify-center items-center",
-        className
+        className,
       )}
     >
       {children}

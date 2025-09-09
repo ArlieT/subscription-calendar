@@ -1,4 +1,4 @@
-import SubscriptionCalendar from "@/components/subscription-calendar";
+import SubscriptionCalendar from "src/components/subscription-calendar";
 
 export default function Home() {
   return (

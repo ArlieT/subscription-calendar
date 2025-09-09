@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { ComboboxDemo } from "@/components/ui/combo-box";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "src/components/ui/button";
+import { Card, CardDescription, CardTitle } from "src/components/ui/card";
+import { ComboboxDemo } from "src/components/ui/combo-box";
+import { Input } from "src/components/ui/input";
+import { Label } from "src/components/ui/label";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { Cycle, Status } from "@prisma/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CloudLightning, Loader, PlusCircle } from "lucide-react";
+import { Loader, PlusCircle } from "lucide-react";
 import React, { useState } from "react";
 import {
   addSubscription as addsubscriptionDB,
@@ -26,8 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { TextArea } from "@radix-ui/themes";
-
+import { toast } from "sonner";
 type ToastState = {
   isOpen: boolean;
   text: string;
@@ -38,12 +37,6 @@ type ToastState = {
 export default function SubscriptionCalendar() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState<ToastState>({
-    isOpen: false,
-    text: "",
-    status: "success",
-    header: "",
-  });
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>(new Date());
   const [billingCycle, setBillingCycle] = useState<Cycle>(Cycle.MONTHLY);
@@ -85,17 +78,9 @@ export default function SubscriptionCalendar() {
       const result = await addsubscriptionDB(newSubscription);
 
       if (!result.error) {
-        setToast({
-          isOpen: true,
-          text: "Subscriptions added!",
-          status: "success",
-        });
+        toast("Subscription added successfully!");
       } else {
-        setToast({
-          isOpen: true,
-          text: "Something went wrong! please try again.",
-          status: "error",
-        });
+        toast("Something went wrong! Please try again.");
       }
 
       queryClient.invalidateQueries({
@@ -152,6 +137,7 @@ export default function SubscriptionCalendar() {
                 <Label htmlFor="billingCycle">Billing Cycle</Label>
                 <Select
                   required
+                  defaultValue="MONTHLY"
                   onValueChange={(value) => setBillingCycle(value as Cycle)}
                 >
                   <SelectTrigger>
@@ -190,7 +176,7 @@ export default function SubscriptionCalendar() {
             <Button
               type="submit"
               variant="default"
-              className="bg-primary-foreground/90 text-background w-full"
+              className="w-full hover:bg-primary"
             >
               {isLoading ? (
                 <Loader className="mr-2 h-4 w-4 animate-spin" />
@@ -209,15 +195,6 @@ export default function SubscriptionCalendar() {
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
       />
-      <Toast.Root
-        isOpen={toast.isOpen}
-        closeToast={() => setToast((prev) => ({ ...prev, isOpen: false }))}
-        status={toast.status}
-      >
-        <Toast.Header>{toast.header}</Toast.Header>
-
-        <Toast.Body>{toast.text || ""}</Toast.Body>
-      </Toast.Root>
     </Card>
   );
 }

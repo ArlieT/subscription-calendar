@@ -61,6 +61,42 @@ export const addSubscription = async (
   }
 };
 
+export const editSubscription = async (
+  newSubscription: Omit<Subscription, "createdAt" | "updatedAt">,
+) => {
+  try {
+    if (!newSubscription.id) {
+      throw new Error("Invalid subscription ID");
+    }
+
+    const result = await db.subscription.update({
+      where: { id: +newSubscription.id },
+      data: {
+        name: newSubscription.name,
+        cost: newSubscription.cost,
+        cycle: newSubscription.cycle,
+        startDate: new Date(),
+        dueDate: new Date(newSubscription.dueDate),
+        icon: newSubscription.icon,
+        tags: newSubscription.tags,
+        description: newSubscription.description,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Subscription updated successfully",
+      data: result,
+    };
+  } catch (error) {
+    console.error("Error editing subscription:", error);
+    return {
+      success: false,
+      error,
+    };
+  }
+};
+
 export async function sanitizeData(data: any) {
   return JSON.parse(JSON.stringify(data));
 }

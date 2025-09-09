@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "src/lib/utils";
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { CircleCheckBig, TriangleAlert } from "lucide-react";
 import React, { useEffect } from "react";

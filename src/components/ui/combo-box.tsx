@@ -4,8 +4,8 @@ import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import axios from "axios";
 
-import { cn, getInitials, getRandomRgbColor } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn, getInitials, getRandomRgbColor } from "src/lib/utils";
+import { Button } from "src/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -13,16 +13,16 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "src/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "src/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
-import useDebounce from "@/lib/hooks/useDebounce";
+import useDebounce from "src/lib/hooks/useDebounce";
 import { LogoApiResponse } from "src/types";
-import { BRAND_LOGOS } from "@/lib/constants";
+import { BRAND_LOGOS } from "src/lib/constants";
 import { Avatar } from "./avatar";
 import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
@@ -49,6 +49,7 @@ export const retrieveBrandDataFromBrandDev = async (domain: string) => {
 
 export function ComboboxDemo({
   setPlatform,
+  defaultValue,
 }: {
   setPlatform: React.Dispatch<
     React.SetStateAction<{
@@ -56,9 +57,10 @@ export function ComboboxDemo({
       icon: string;
     }>
   >;
+  defaultValue?: string;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState(defaultValue || "");
 
   const { data: logo } = useQuery<LogoApiResponse>({
     queryKey: ["logos", value],
@@ -90,8 +92,8 @@ export function ComboboxDemo({
           {logo
             ? logo?.brand?.domain
             : value && !logo
-            ? value
-            : "select platform"}
+              ? value
+              : defaultValue || "select platform"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -130,7 +132,7 @@ export function ComboboxDemo({
                       removeDomain(logo?.brand.domain || "") ===
                         removeDomain(value)
                         ? "opacity-100"
-                        : "opacity-0"
+                        : "opacity-0",
                     )}
                   />
                 </CommandItem>
@@ -140,7 +142,7 @@ export function ComboboxDemo({
                   value={value}
                   onSelect={(value) => {
                     const findLogo = BRAND_LOGOS.find((item) =>
-                      item.name.includes(value.toLowerCase())
+                      item.name.includes(value.toLowerCase()),
                     );
                     setPlatform({
                       name: findLogo?.name || removeDomain(value),
@@ -156,7 +158,7 @@ export function ComboboxDemo({
                       <AvatarImage
                         src={
                           BRAND_LOGOS.find((item) =>
-                            item.name.includes(value.toLowerCase())
+                            item.name.includes(value.toLowerCase()),
                           )?.icon
                         }
                         alt={value}
@@ -175,7 +177,7 @@ export function ComboboxDemo({
                       "mr-2 h-4 w-4",
                       removeDomain(value || "") === removeDomain(value)
                         ? "opacity-100"
-                        : "opacity-0"
+                        : "opacity-0",
                     )}
                   />
                 </CommandItem>

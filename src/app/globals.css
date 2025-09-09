@@ -107,6 +107,14 @@ ul {
         --chart-4: 43 74% 66%;
         --chart-5: 27 87% 67%;
         --radius: 0.5rem;
+        --sidebar-background: 0 0% 98%;
+        --sidebar-foreground: 240 5.3% 26.1%;
+        --sidebar-primary: 240 5.9% 10%;
+        --sidebar-primary-foreground: 0 0% 98%;
+        --sidebar-accent: 240 4.8% 95.9%;
+        --sidebar-accent-foreground: 240 5.9% 10%;
+        --sidebar-border: 220 13% 91%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
     }
     .dark {
         --background: 0 0% 0%;
@@ -115,8 +123,6 @@ ul {
         --card-foreground: 210 20% 98%;
         --popover: 224 71.4% 4.1%;
         --popover-foreground: 210 20% 98%;
-        --primary: 224 71.4% 4.1%;
-        --primary-foreground: 210 20% 98%;
         --secondary: 215 27.9% 16.9%;
         --secondary-foreground: 210 20% 98%;
         --muted: 215 27.9% 16.9%;
@@ -125,14 +131,26 @@ ul {
         --accent-foreground: 210 20% 98%;
         --destructive: 0 62.8% 30.6%;
         --destructive-foreground: 210 20% 98%;
-        --border: 215 27.9% 16.9%;
-        --input: 215 27.9% 16.9%;
+
+        --border: 0 0% 100%; /* white borders */
+        --input: 0 0% 30%; /* white input border */
+        --primary: 0 0% 100%; /* white button background */
+        --primary-foreground: 0 0% 0%; /* black text on white button */
+
         --ring: 216 12.2% 83.9%;
         --chart-1: 220 70% 50%;
         --chart-2: 160 60% 45%;
         --chart-3: 30 80% 55%;
         --chart-4: 280 65% 60%;
         --chart-5: 340 75% 55%;
+        --sidebar-background: 240 5.9% 10%;
+        --sidebar-foreground: 240 4.8% 95.9%;
+        --sidebar-primary: 224.3 76.3% 48%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 240 3.7% 15.9%;
+        --sidebar-accent-foreground: 240 4.8% 95.9%;
+        --sidebar-border: 240 3.7% 15.9%;
+        --sidebar-ring: 217.2 91.2% 59.8%;
     }
 }
 
@@ -220,7 +238,7 @@ ul {
 
 /* custom scrollbar */
 ::-webkit-scrollbar {
-    width: 20px;
+    width: 16px;
 }
 
 ::-webkit-scrollbar-track {
@@ -236,4 +254,58 @@ ul {
 
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
+}
+
+/* Fix button hover states for better text contrast */
+@layer components {
+    /* Fix default/primary button hover - ensure white text on dark background */
+    button[class*="bg-primary"]:hover,
+    .bg-primary:hover {
+        background-color: hsl(var(--primary) / 0.9) !important;
+        color: hsl(var(--primary-foreground)) !important;
+    }
+
+    /* Fix outline button hover - ensure proper contrast */
+    button[class*="border"]:hover,
+    button[class*="outline"]:hover {
+        background-color: hsl(var(--accent)) !important;
+        color: hsl(var(--accent-foreground)) !important;
+    }
+
+    /* Fix secondary button hover */
+    button[class*="bg-secondary"]:hover {
+        background-color: hsl(var(--secondary) / 0.8) !important;
+        color: hsl(var(--secondary-foreground)) !important;
+    }
+
+    /* Fix ghost button hover */
+    button[class*="ghost"]:hover {
+        background-color: hsl(var(--accent)) !important;
+        color: hsl(var(--accent-foreground)) !important;
+    }
+
+    /* Fallback for buttons without specific variants */
+    button:not([class*="bg-"]):not([class*="ghost"]):not(
+            [class*="outline"]
+        ):hover {
+        background-color: hsl(var(--primary) / 0.9) !important;
+        color: hsl(var(--primary-foreground)) !important;
+    }
+
+    /* Light mode specific fixes */
+    :root button:hover {
+        --accent-foreground: 220.9 39.3% 11%;
+    }
+
+    /* Dark mode specific fixes */
+    .dark button:hover {
+        --accent-foreground: 210 20% 98%;
+    }
+
+    /* Ensure smooth transitions */
+    button {
+        transition:
+            background-color 0.2s ease-in-out,
+            color 0.2s ease-in-out;
+    }
 }

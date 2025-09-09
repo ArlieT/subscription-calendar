@@ -1,4 +1,4 @@
-import { Button, ButtonProps } from "@/components/ui/button";
+import { Button, ButtonProps } from "src/components/ui/button";
 import {
   calculateMonthlyCost,
   cn,
@@ -6,8 +6,8 @@ import {
   getFirstDayOfMonth,
   getLastDayOfMonth,
   getSubscriptionOfTheDay,
-} from "@/lib/utils";
-import { useUser } from "@clerk/nextjs";
+} from "src/lib/utils";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { AvatarImage } from "@radix-ui/react-avatar";
 import { Popover, PopoverTrigger } from "@radix-ui/react-popover";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,17 +16,28 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import MotionNumber from "motion-number";
 import React from "react";
-import { removeSubscription } from "src/db/subscriptions";
+import { removeSubscription, editSubscription } from "src/db/subscriptions";
 import { Subscription } from "src/types";
+import { Status } from "@prisma/client";
 import AvatarFallbackColored from "./Avatar";
 import { BottomSheet } from "./bottom-sheet";
 import BottomSheetContent from "./bottom-sheet-content";
 import { Avatar } from "./ui/avatar";
+import { toast } from "sonner";
 
 type CalendarProps = {
   subscriptions?: Subscription[];
   selectedDate: Date;
   setSelectedDate: React.Dispatch<React.SetStateAction<Date>>;
+};
+
+type EditFormData = {
+  name: string;
+  description: string;
+  cost: number;
+  cycle: string;
+  dueDate: Date;
+  icon: string;
 };
 
 const CalendarMain = ({
@@ -35,6 +46,7 @@ const CalendarMain = ({
   setSelectedDate,
 }: CalendarProps) => {
   const { user } = useUser();
+  const { openSignIn } = useClerk();
   const queryClient = useQueryClient();
   const [open, setOpen] = React.useState(false);
   const [isFromLeft, setIsFromLeft] = React.useState<boolean>(true);
@@ -73,10 +85,55 @@ const CalendarMain = ({
     }
   };
 
-  const [isEditMode, setIsEditMode] = React.useState(false);
-  const handleEdit = (id: number | undefined) => {
-    if (!id) return;
-    setIsEditMode(true);
+  const editMutation = useMutation({
+    mutationFn: editSubscription,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+
+      if (result.success) {
+        // Update the selectedDateToView state with the edited subscription
+        setSelectedDateToView((prev) => {
+          if (!prev) return prev;
+          return prev.map((sub) =>
+            sub.id === result.data?.id ? { ...sub, ...result.data } : sub,
+          );
+        });
+
+        toast("Subscription updated!", {
+          description: "Your subscription has been updated successfully.",
+        });
+      } else {
+        toast.error("Something went wrong! Please try again.");
+      }
+    },
+    onError: () => {
+      toast.error("Failed to update subscription. Please try again.");
+    },
+  });
+
+  const handleEdit = async (
+    subscription: Subscription,
+    formData: EditFormData,
+  ) => {
+    if (!user?.id) {
+      openSignIn();
+      return;
+    }
+
+    const updatedSubscription: Omit<Subscription, "createdAt" | "updatedAt"> = {
+      id: subscription.id,
+      user_id: user.id,
+      name: formData.name,
+      description: formData.description,
+      cost: formData.cost,
+      cycle: formData.cycle as any,
+      dueDate: formData.dueDate,
+      tags: subscription.tags || [],
+      icon: formData.icon,
+      status: Status.ACTIVE,
+    };
+
+    editMutation.mutate(updatedSubscription);
   };
 
   const handlePrevMonth = () => {
@@ -226,7 +283,7 @@ const CalendarMain = ({
                       <motion.div
                         key={index}
                         whileHover="hover"
-                        className="group min-w-full w-max h-full flex items-center justify-center"
+                        className="group text-primary min-w-full w-max h-full flex items-center justify-center"
                       >
                         {subscriptionsForDay?.length > 0 ? (
                           <div
@@ -234,39 +291,35 @@ const CalendarMain = ({
                               "w-full flex flex-1 justify-center md:mb-3 py-1 cursor-pointer",
                             )}
                           >
-                            {/* only show the first three subscriptions */}
                             {[...subscriptionsForDay]
-                              ?.splice(0, 2)
-                              .map((subcription, index) => {
-                                return (
-                                  <div
-                                    key={subcription.id}
-                                    className={cn("rounded-full -mr-1")}
-                                  >
-                                    <Avatar className="size-4 min-w-4 min-h-4 md:min-h-6 md:min-w-6 md:size-6">
-                                      <AvatarImage
-                                        src={subcription?.icon || ""}
-                                        alt={subcription.name}
-                                      />
-                                      <AvatarFallbackColored>
-                                        {subcription.name.charAt(0)}
-                                      </AvatarFallbackColored>
-                                      {/* <AvatarFallback
-                                        key={index}
-                                        style={{
-                                          background: `linear-gradient(135deg, ${bgColor}, rgb(140, 160, 250))`,
-                                        }}
-                                        className="w-full text-[10px] flex justify-center items-center pt-0.5"
-                                      >
-                                        {subcription.name.charAt(0)}
-                                      </AvatarFallback> */}
-                                    </Avatar>
-                                  </div>
-                                );
-                              })}
+                              .slice(0, 2)
+                              .map((subscription, index) => (
+                                <div
+                                  key={subscription.id}
+                                  className={cn("rounded-full", {
+                                    "-ml-2": index !== 0,
+                                  })}
+                                >
+                                  <Avatar className="size-5 md:size-6">
+                                    <AvatarImage
+                                      src={subscription?.icon || ""}
+                                      alt={subscription.name}
+                                    />
+                                    <AvatarFallbackColored>
+                                      {subscription.name.charAt(0)}
+                                    </AvatarFallbackColored>
+                                  </Avatar>
+                                </div>
+                              ))}
+
                             {subscriptionsForDay.length > 2 && (
-                              <div className=" flex justify-center items-center size-4 min-w-4 min-h-4 md:min-h-7 md:min-w-7 md:size-7 rounded-full -mr-1 bg-zinc-950 z-10 text text-[10px]">
-                                <span>+{subscriptionsForDay.length - 2}</span>
+                              <div
+                                className={cn(
+                                  "flex justify-center items-center rounded-full bg-zinc-800 text-white text-[10px] font-medium",
+                                  "size-5 md:size-6 -ml-2",
+                                )}
+                              >
+                                +{subscriptionsForDay.length - 2}
                               </div>
                             )}
                           </div>
@@ -308,8 +361,6 @@ const CalendarMain = ({
           <div className="h-full w-full text-center">no items.</div>
         )}
         <BottomSheetContent
-          isLast={false}
-          isEditMode={isEditMode}
           selectedDate={selectedDate}
           selectedSubscription={selectedDateToView}
           handleDelete={handleDelete}

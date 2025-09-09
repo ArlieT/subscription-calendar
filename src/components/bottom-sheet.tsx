@@ -1,92 +1,81 @@
 "use client";
-import useClickOutside from "@/lib/hooks/useClickoutSide";
-import { cn } from "@/lib/utils";
-import { useEmailLink } from "@clerk/nextjs";
-import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
-import React, { useEffect } from "react";
+
+import * as React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "src/components/ui/dialog";
+import { cn } from "src/lib/utils";
 
 type Props = {
   children: React.ReactNode;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  title?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-const BottomSheet = ({ children, open, setOpen, title, ...props }: Props) => {
-  const ref = useClickOutside<HTMLDivElement>(() => {
-    if (open) {
-      setOpen(false);
-    }
-  });
-
-  const variants = {
-    open: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        y: { stiffness: 1000, velocity: -10, duration: 0.1 },
-      },
-    },
-    closed: {
-      y: 50,
-      opacity: 0,
-      ttransition: {
-        y: { stiffness: 1000 },
-      },
-      ransition: {
-        y: { stiffness: 1000, velocity: -100, duration: 0.1 },
-      },
-    },
-  };
-
-  useEffect(() => {
+const BottomSheet = ({
+  children,
+  open,
+  setOpen,
+  title,
+  className,
+  ...props
+}: Props) => {
+  React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
     }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, [open]);
 
-  const modalStyles =
-    "md:m-auto md:inset-0 md:w-3/5 md:h-fit max-h-[80%] md:rounded-3xl";
-  const bottomSheetStyles = "rounded-b-none inset-x-0 min-h-[30vh] w-[99.5%]";
-
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm" />
-          <div className="relative">
-            <motion.div
-              ref={ref}
-              className={cn(
-                "fixed bottom-0 mx-auto inset-x-0 rounded-3xl overflow-hidden",
-                modalStyles,
-                bottomSheetStyles,
-                props.className,
-              )}
-              variants={variants}
-              initial="closed"
-              animate={open ? "open" : "closed"}
-            >
-              <div className="w-full pt-[46px] relative overflow-y-auto">
-                <div className="block md:hidden absolute h-[6px] w-10 top-2 inset-x-0 rounded-full mx-auto bg-white/60" />
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                  }}
-                  type="button"
-                  className=" absolute right-6 md:right-0 md:top-0 top-6 hidden md:block"
-                >
-                  <X className="size-5" />
-                </button>
-                <div className="overflow-x-hidden">{children}</div>
-              </div>
-            </motion.div>
-          </div>
-        </>
-      )}
-    </AnimatePresence>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent
+        className={cn(
+          // Base styles
+          "h-full overflow-y-auto",
+          "p-0 gap-0 border-0 max-w-none w-auto h-auto",
+          // Mobile: Bottom sheet behavior
+          "fixed bottom-0 left-0 right-0 top-auto translate-x-0 translate-y-0",
+          "rounded-t-3xl rounded-b-none",
+          "min-h-[30vh] max-h-[80vh]",
+          "data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+          "data-[state=open]:duration-300 data-[state=closed]:duration-300",
+          // Desktop: Modal behavior
+          "md:fixed md:left-[50%] md:top-[50%] md:translate-x-[-50%] md:translate-y-[-50%]",
+          "md:rounded-3xl md:w-3/5 md:h-fit md:max-h-[80vh]",
+          "md:min-h-0",
+          "md:data-[state=open]:slide-in-from-left-1/2 md:data-[state=open]:slide-in-from-top-[48%]",
+          "md:data-[state=closed]:slide-out-to-left-1/2 md:data-[state=closed]:slide-out-to-top-[48%]",
+          className,
+        )}
+        {...props}
+      >
+        <div className="w-full h-full pt-[46px] md:pt-6 relative ">
+          {/* Mobile drag indicator */}
+          <div className="block md:hidden absolute h-[6px] w-10 top-2 left-1/2 transform -translate-x-1/2 rounded-full bg-white/60" />
+
+          {/* Header with title if provided */}
+          {/*{title && (
+            <DialogHeader className="px-6 pb-4">
+              <DialogTitle>{title}</DialogTitle>
+            </DialogHeader>
+          )}*/}
+
+          {/* Content */}
+          <div className="overflow-x-hidden">{children}</div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
