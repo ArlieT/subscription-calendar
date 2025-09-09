@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     description: "Easily track and manage your subscriptions.",
     images: [
       {
-        url: "/images/main.png",
+        url: "/images/opengraph/main.png",
         width: 1200,
         height: 630,
         alt: "Subscription calendar preview",
