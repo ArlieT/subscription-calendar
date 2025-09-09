@@ -21,10 +21,10 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
-
 export const metadata: Metadata = {
   title: "Subscription calendar",
   description: "Subscription calendar for your subscriptions.",
+  metadataBase: new URL(process.env.VERCEL_URL || "http://localhost:3000"),
   openGraph: {
     title: "Subscription calendar",
     description: "Easily track and manage your subscriptions.",
@@ -66,6 +66,7 @@ export default function RootLayout({
           <ReactQueryProvider>
             <div className="h-dvh w-full bg-background">
               <Navbar />
+              <div className="text-white"></div>
               <main className="relative h-auto w-full">{children}</main>
             </div>
           </ReactQueryProvider>
