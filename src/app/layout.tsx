@@ -25,7 +25,6 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Subscription calendar",
   description: "Subscription calendar for your subscriptions.",
-
   metadataBase: new URL(
     process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
@@ -33,7 +32,6 @@ export const metadata: Metadata = {
   ),
   openGraph: {
     siteName: "Subscription calendar",
-    url: "https://subscription-calendar.vercel.app",
     title: "Subscription calendar",
     description: "Easily track and manage your subscriptions.",
     images: [
