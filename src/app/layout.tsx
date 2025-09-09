@@ -21,15 +21,19 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
   weight: "100 900",
 });
+
 export const metadata: Metadata = {
   title: "Subscription calendar",
   description: "Subscription calendar for your subscriptions.",
+
   metadataBase: new URL(
     process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : "http://localhost:3000",
   ),
   openGraph: {
+    siteName: "Subscription calendar",
+    url: "https://subscription-calendar.vercel.app",
     title: "Subscription calendar",
     description: "Easily track and manage your subscriptions.",
     images: [
